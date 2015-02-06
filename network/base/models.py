@@ -30,7 +30,7 @@ class Station(models.Model):
     """Model for SatNOGS ground stations."""
     owner = models.ForeignKey(User)
     name = models.CharField(max_length=45)
-    image = models.ImageField(upload_to='ground_stations')
+    image = models.ImageField(upload_to='ground_stations', default='../static/images/satnogs_net.png')
     alt = models.PositiveIntegerField(help_text='In meters above ground')
     lat = models.FloatField(validators=[MaxValueValidator(90),
                                         MinValueValidator(-90)])
