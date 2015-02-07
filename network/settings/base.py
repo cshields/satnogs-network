@@ -96,6 +96,7 @@ STATICFILES_FINDERS = (
 MEDIA_ROOT = path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
+STATION_DEFAULT_IMAGE = '/static/images/SatNOGS-logo-vertical-black-small.png'
 
 # App conf
 ROOT_URLCONF = 'network.urls'

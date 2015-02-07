@@ -1,6 +1,7 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.timezone import now
+from django.conf import settings
 
 from network.users.models import User
 
@@ -49,7 +50,7 @@ class Station(models.Model):
         if self.image and hasattr(self.image, 'url'):
             return self.image.url
         else:
-            return '/static/images/satnogs_net.png'
+            return settings.STATION_DEFAULT_IMAGE
 
     def __unicode__(self):
         return "%d - %s" % (self.pk, self.name)
