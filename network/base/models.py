@@ -30,7 +30,7 @@ class Station(models.Model):
     """Model for SatNOGS ground stations."""
     owner = models.ForeignKey(User)
     name = models.CharField(max_length=45)
-    image = models.ImageField(upload_to='ground_stations', default='../static/images/satnogs_net.png')
+    image = models.ImageField(upload_to='ground_stations', blank=True)
     alt = models.PositiveIntegerField(help_text='In meters above ground')
     lat = models.FloatField(validators=[MaxValueValidator(90),
                                         MinValueValidator(-90)])
@@ -44,6 +44,12 @@ class Station(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     online = models.BooleanField(default=False,
                                  help_text='Is your Ground Station functional?')
+
+    def get_image(self):
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
+        else:
+            return '/static/images/satnogs_net.png'
 
     def __unicode__(self):
         return "%d - %s" % (self.pk, self.name)
