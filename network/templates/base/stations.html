@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load tags %}
 
+{% load staticfiles %}
+
 {% block title %}Ground Stations{% endblock %}
 
 {% block content %}
@@ -61,3 +63,7 @@
 <!-- Station Modal -->
 {% include 'includes/station_edit.html' %}
 {% endblock content %}
+
+{% block javascript %}
+  <script src="{% static 'js/gridsquare.js' %}"></script>
+{% endblock javascript %}
