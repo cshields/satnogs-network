@@ -9,7 +9,7 @@ class AntennaAdmin(admin.ModelAdmin):
 
 
 class StationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'lng', 'lat', 'location')
+    list_display = ('name', 'owner', 'lng', 'lat')
 
 
 class SatelliteAdmin(admin.ModelAdmin):
