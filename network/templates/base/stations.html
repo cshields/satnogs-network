@@ -35,9 +35,9 @@
               </a>
             </td>
             <td>{{ station.name }}</td>
-            {% if station.location %}
+            {% if station.qthlocator %}
               <td title="{{ station.lat|floatformat:-3 }}, {{ station.lng|floatformat:-3 }}">
-                {{ station.location }}
+                {{ station.qthlocator }}
               </td>
             {% else %}
               <td>{{ station.lat|floatformat:-3 }}, {{ station.lng|floatformat:-3 }}</td>

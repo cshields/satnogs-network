@@ -37,9 +37,9 @@ function gridsquare() {
         working_lat = Math.floor((working_lat - Math.floor(working_lat)) * 24);
         var lat_subsquare = FIELD_IDENTIFIERS[working_lat];
         
-        // write the result, like EM69uf, to location field
-        var location = document.getElementById('location');
-        location.value = '' + lon_field + lat_field + lon_square + lat_square +
+        // write the result, like EM69uf, to qthlocator field
+        var qthlocator = document.getElementById('qthlocator');
+        qthlocator.value = '' + lon_field + lat_field + lon_square + lat_square +
             lon_subsquare.toLowerCase() + lat_subsquare.toLowerCase();
     }
 }       

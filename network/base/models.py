@@ -37,6 +37,7 @@ class Station(models.Model):
                                         MinValueValidator(-90)])
     lng = models.FloatField(validators=[MaxValueValidator(180),
                                         MinValueValidator(-180)])
+    qthlocator = models.CharField(max_length=255, null=True, blank=True)
     location = models.CharField(max_length=255, null=True, blank=True)
     antenna = models.ManyToManyField(Antenna, null=True, blank=True,
                                      help_text=('If you want to add a new Antenna '
