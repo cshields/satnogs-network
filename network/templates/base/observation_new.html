@@ -6,7 +6,7 @@
 {% block title %}New Observation{% endblock %}
 
 {% block css %}
-<link href="{% static 'css/bootstrap-datetimepicker.min.css' %}" rel="stylesheet">
+  <link href="{% static 'css/lib/bootstrap-datetimepicker.min.css' %}" rel="stylesheet">
 {% endblock css %}
 
 {% block content %}
@@ -36,7 +36,7 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">Transponder</label>
       <div class="col-sm-9">
-        <select id="transponder-selection" class="form-control" disabled name="transponder" >
+        <select id="transponder-selection" class="form-control" disabled name="transponder">
           <option id="no-transponder" value="" disabled selected>No transponder available</option>
           {% for transponder in transponders %}
             <option data-satellite="{{ transponder.satellite.norad_cat_id }}"
@@ -52,12 +52,15 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">Start Time</label>
       <div class="col-sm-9">
-        <div class='input-group date' id='datetimepicker-start'>
+        <div class='input-group date' id="datetimepicker-start"
+             data-date-minstart="{{ date_min_start }}">
           <input type="text"
                  class="form-control"
                  name="start-time"
-                 data-date-format="YYYY-MM-DD HH:mm" />
-          <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span>
+                 data-date-format="YYYY-MM-DD HH:mm"
+                 autocomplete="off">
+          <span class="input-group-addon">
+            <span class="glyphicon glyphicon-calendar"></span>
           </span>
         </div>
       </div>
@@ -65,14 +68,21 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">End Time</label>
       <div class="col-sm-9">
-        <div class='input-group date' id='datetimepicker-end'>
+        <div class='input-group date' id="datetimepicker-end"
+             data-date-maxrange="{{ date_max_range }}">
           <input type="text"
                  class="form-control"
                  name="end-time"
-                 data-date-format="YYYY-MM-DD HH:mm" />
-          <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span>
+                 data-date-format="YYYY-MM-DD HH:mm"
+                 autocomplete="off">
+          <span class="input-group-addon">
+            <span class="glyphicon glyphicon-calendar"></span>
           </span>
         </div>
+        <small class="pull-right">
+          <strong>IMPORTANT:</strong>
+          Timeframe is considered to be in UTC timezone.
+        </small>
       </div>
     </div>
   </div>
@@ -111,9 +121,9 @@
 {% endblock content %}
 
 {% block javascript %}
-<script src="{% static 'js/d3.v3.min.js' %}"></script>
-<script src="{% static 'js/d3-timeline.js' %}"></script>
-<script src="{% static 'js/moment.min.js' %}"></script>
-<script src="{% static 'js/bootstrap-datetimepicker.min.js' %}"></script>
-<script src="{% static 'js/observation_new.js' %}"></script>
+  <script src="{% static 'js/lib/d3.v3.min.js' %}"></script>
+  <script src="{% static 'js/lib/d3-timeline.js' %}"></script>
+  <script src="{% static 'js/lib/moment.min.js' %}"></script>
+  <script src="{% static 'js/lib/bootstrap-datetimepicker.min.js' %}"></script>
+  <script src="{% static 'js/observation_new.js' %}"></script>
 {% endblock javascript %}

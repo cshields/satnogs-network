@@ -8,7 +8,7 @@
 {% block content %}
   <div class="row">
     <div class="col-sm-12">
-      <h2>{% avatar user 50 %} {{ user.get_full_name }} ({{ user.username }})
+      <h2>{% avatar user 50 %} {{ user.displayname }}
         {% if user == request.user %}
           <div class="pull-right edit-profile-buttons">
             <a class="btn btn-primary" href="{% url 'users:update_user' %}">My Info</a>
@@ -43,13 +43,28 @@
               <tr>
                 <td>
                   <a href="{% url 'base:station_view' id=station.id %}">
-                    <span class="label label-default">
+                    <span class="label
+                                 {% if station.online %}
+                                   label-success
+                                 {% else %}
+                                   label-danger
+                                 {% endif %}">
                       {{ station.id }}
                     </span>
                   </a>
                 </td>
-                <td>{{ station.name }}</td>
-                <td>{{ station.lat }}, {{ station.lng }}</td>
+                <td>
+                  <a href="{% url 'base:station_view' id=station.id %}">
+                    {{ station.name }}
+                  </a>
+                </td>
+                {% if station.location %}
+                  <td title="{{ station.lat|floatformat:-3 }}, {{ station.lng|floatformat:-3 }}">
+                    {{ station.location }}
+                  </td>
+                {% else %}
+                  <td>{{ station.lat|floatformat:-3 }}, {{ station.lng|floatformat:-3 }}</td>
+                {% endif %}
                 <td>{{ station.alt}} m</td>
                 <td>
                   {% for antenna in station.antenna.all %}
@@ -65,7 +80,7 @@
   {% else %}
     <div class="row">
       <div class="col-md-12 notice">
-        <p>{{ user.get_full_name }} is not an owner of any ground stations.</p>
+        <p>{{ user.displayname }} is not an owner of any ground stations.</p>
       </div>
     </div>
   {% endif %}
@@ -80,6 +95,11 @@
     </div>
   </div>
 
+  <div class="row">
+    <div class="col-sm-12">
+      <h3>Observations</h3>
+    </div>
+  </div>
 
   {% if observations %}
     <div class="row">
@@ -91,7 +111,6 @@
             <th>Frequency</th>
             <th>Encoding</th>
             <th>Timeframe</th>
-            <th>Observer</th>
           </thead>
           <tbody>
             {% for observation in observations.all %}
@@ -112,7 +131,6 @@
                 <td>{% frq observation.transponder.downlink_low %}</td>
                 <td>{{ observation.transponder.mode }}</td>
                 <td>{{ observation.start|date:"Y-m-d H:i:s" }}</br>{{ observation.end|date:"Y-m-d H:i:s" }}</td>
-                <td>{{ observation.author.get_full_name }}</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -122,7 +140,7 @@
   {% else %}
     <div class="row">
       <div class="col-md-12 notice">
-        <p>{{ user.get_full_name }} is not an author of any observations.</p>
+        <p>{{ user.displayname }} is not an author of any observation.</p>
       </div>
     </div>
   {% endif %}

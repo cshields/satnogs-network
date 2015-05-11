@@ -6,23 +6,33 @@
 {% block title %}Ground Station {{ station.name }}{% endblock %}
 
 {% block css %}
-  <script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.4/mapbox.js'></script>
-  <link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.4/mapbox.css' rel='stylesheet' />
+  <link rel="stylesheet" href="{% static 'css/lib/mapbox.css' %}">
 {% endblock css %}
 
 {% block content %}
-  <h2 id="station-info"
-      data-name="{{ station.name }}"
-      data-id="{{ station.id }}"
-      data-lng="{{ station.lng }}"
-      data-lat="{{ station.lat }}">
-     {{ station.id }} - {{ station.name }}
-    {% if request.user == station.owner %}
-      <button class="btn btn-primary pull-right" data-toggle="modal" data-target="#StationModal">Edit Ground Station</button>
-      <!-- Station Modal -->
-      {% include 'includes/station_edit.html' %}
-    {% endif %}
-  </h2
+  <div class="row">
+    <div class="col-md-6">
+      <h2 id="station-info"
+          data-name="{{ station.name }}"
+          data-id="{{ station.id }}"
+          data-lng="{{ station.lng }}"
+          data-lat="{{ station.lat }}">
+        {{ station.id }} - {{ station.name }}
+        {% if station.online %}
+          <span class="label label-success">Online</span>
+        {% else %}
+          <span class="label label-danger">Offline</button>
+        {% endif %}
+      </h2>
+    </div>
+    <div class="col-md-6 text-right">
+      <h2>
+        {% if request.user == station.owner %}
+          <button class="btn btn-primary" data-toggle="modal" data-target="#StationModal">Edit Ground Station</button>
+        {% endif %}
+      </h2>
+    </div>
+  </div>
 
   <div class="row">
     <div class="col-md-4">
@@ -30,16 +40,26 @@
         <span class="label label-default">Owner</span>
         <span class="gs-front-data">
           <a href="{% url 'users:view_user' username=station.owner.username %}">
-            {{ station.owner.get_full_name }}
+            {{ station.owner.displayname }}
           </a>
         </span>
       </div>
-      <div class="gs-front-line">
-        <span class="label label-default">Location</span>
-        <span class="gs-front-data">
-          {{ station.location }}
-        </span>
-      </div>
+      {% if station.qthlocator %}
+        <div class="gs-front-line">
+          <span class="label label-default">QTH Locator</span>
+          <span class="gs-front-data">
+            {{ station.qthlocator }}
+          </span>
+        </div>
+      {% endif %}
+      {% if station.location %}
+        <div class="gs-front-line">
+          <span class="label label-default">Location</span>
+          <span class="gs-front-data">
+            {{ station.location }}
+          </span>
+        </div>
+      {% endif %}
       <div class="gs-front-line">
         <span class="label label-default">Coordinates</span>
         <span class="gs-front-data">
@@ -57,6 +77,13 @@
         <span class="gs-front-data"
               title="{{ station.created|date:"c" }}">
           {{ station.created|timesince }} ago
+        </span>
+      </div>
+      <div class="gs-front-line">
+        <span class="label label-default">Last Seen</span>
+        <span class="gs-front-data"
+              title="{{ station.last_seen|date:"c" }}">
+          {{ station.last_seen|timesince }} ago
         </span>
       </div>
     </div>
@@ -86,12 +113,18 @@
 
   <div class="row">
     <div class="col-md-12">
-      <div id="map-station"></div>
+      <div id="map-station" data-mapboxid="{{ mapbox_id }}" data-mapboxtoken="{{ mapbox_token }}"></div>
     </div>
   </div>
+
+  {% if request.user == station.owner %}
+    <!-- Station Modal -->
+    {% include 'includes/station_edit.html' %}
+  {% endif %}
 {% endblock content %}
 
 {% block javascript %}
+  <script src="{% static 'js/lib/mapbox.js' %}"></script>
   <script src="{% static 'js/station_view.js' %}"></script>
   <script src="{% static 'js/gridsquare.js' %}"></script>
 {% endblock javascript %}

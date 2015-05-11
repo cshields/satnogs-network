@@ -49,6 +49,7 @@ class DataSerializer(serializers.ModelSerializer):
     class Meta:
         model = Data
         fields = ('id', 'start', 'end', 'observation', 'ground_station', 'payload')
+        read_only_fields = ['id', 'start', 'end', 'observation', 'ground_station']
 
 
 class JobSerializer(serializers.ModelSerializer):

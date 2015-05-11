@@ -24,6 +24,6 @@ nosetests.xml
 *.sqlite
 *.sqlite3
 
-# Media
+# Media & Static
 media
-staticfiles
+/staticfiles/*

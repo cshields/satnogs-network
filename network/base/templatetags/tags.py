@@ -16,5 +16,5 @@ def active(request, pattern):
 def frq(value):
     to_format = float(value)
     formatted = format(float(to_format) / 1000000, '.3f')
-    formatted = formatted+' Mhz'
+    formatted = formatted + ' Mhz'
     return formatted

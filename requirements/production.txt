@@ -1,3 +1,4 @@
 # Production-only dependencies
 -r base.txt
-envdir==0.7
+
+MySQL-python==1.2.5

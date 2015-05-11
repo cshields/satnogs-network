@@ -1,3 +1,5 @@
+from django.utils.timezone import now
+
 from rest_framework import permissions
 
 
@@ -10,13 +12,24 @@ class SafeMethodsOnlyPermission(permissions.BasePermission):
         return request.method in permissions.SAFE_METHODS
 
 
-class StationOwnerCanEditPermission(SafeMethodsOnlyPermission):
-    """Only the owner can push new data"""
-    def has_object_permission(self, request, view, obj=None):
-        if obj is None:
-            can_edit = True
+class StationOwnerCanViewPermission(permissions.BasePermission):
+    """Only the owner can view station jobs"""
+    def has_object_permission(self, request, view, obj):
+        can_view = False
+        if request.user.is_authenticated() and request.user == obj.ground_station.owner:
+            can_view = True
+        if can_view:
+            obj.last_seen = now()
+            obj.save()
+        return can_view
+
+
+class StationOwnerCanEditPermission(permissions.BasePermission):
+    """Only the owner can edit station jobs"""
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if request.user.is_authenticated() and request.user == obj.ground_station.owner:
+            return True
         else:
-            can_edit = request.user == obj.observation.author
-        return (can_edit or
-                super(StationOwnerCanEditPermission,
-                      self).has_object_permission(request, view, obj))
+            return False

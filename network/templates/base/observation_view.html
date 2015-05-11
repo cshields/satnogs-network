@@ -6,111 +6,111 @@
 {% block title %}Observation {{ observation.id }}{% endblock %}
 
 {% block content %}
-<h2 id="observation-info"
-    data-start="{{ observation.start|date:"U"}}"
-    data-end="{{ observation.end|date:"U"}}">
-  Observation #{{ observation.id }}
-</h2>
+  <h2 id="observation-info"
+      data-start="{{ observation.start|date:"U"}}"
+      data-end="{{ observation.end|date:"U"}}">
+    Observation #{{ observation.id }}
+  </h2>
 
-<div class="row">
-  <div class="col-md-12">
-    <table class="table table-hover">
-      <thead>
-        <th>Satellite</th>
-        <th>Frequency</th>
-        <th>Encoding</th>
-        <th>Timeframe</th>
-        <th>Observer</th>
-      </thead>
-      <tbody>
-          <tr>
-            <td>{{ observation.satellite.norad_cat_id }} - {{ observation.satellite.name }}</td>
-            <td>{% frq observation.transponder.downlink_low %}</td>
-            <td>{{ observation.transponder.mode }}</td>
-            <td>{{ observation.start|date:"Y-m-d H:i:s" }}</br>{{ observation.end|date:"Y-m-d H:i:s" }}</td>
-            <td>
-              <a href="{% url 'users:view_user' username=observation.author.username %}">
-                {{ observation.author.get_full_name }}
-              </a>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-{% if not observation.data_set.all %}
   <div class="row">
     <div class="col-md-12">
-      <p class="notice">
-        No data associated with this observation.
-      </p>
+      <table class="table table-hover">
+        <thead>
+          <th>Satellite</th>
+          <th>Frequency</th>
+          <th>Encoding</th>
+          <th>Timeframe</th>
+          <th>Observer</th>
+        </thead>
+        <tbody>
+            <tr>
+              <td>{{ observation.satellite.norad_cat_id }} - {{ observation.satellite.name }}</td>
+              <td>{% frq observation.transponder.downlink_low %}</td>
+              <td>{{ observation.transponder.mode }}</td>
+              <td>{{ observation.start|date:"Y-m-d H:i:s" }}</br>{{ observation.end|date:"Y-m-d H:i:s" }}</td>
+              <td>
+                <a href="{% url 'users:view_user' username=observation.author.username %}">
+                  {{ observation.author.displayname }}
+                </a>
+              </td>
+            </tr>
+        </tbody>
+      </table>
     </div>
   </div>
-{% else %}
-  <div class="row">
-    <div class="col-md-12">
-      <h3>Timeline</h3>
-      <div id="timeline"></div>
-      <div id="hoverRes">
-        <div class="coloredDiv"></div>
-        <div id="name"></div>
-        <div id="scrolled_date"></div>
+
+  {% if not observation.data_set.all %}
+    <div class="row">
+      <div class="col-md-12">
+        <p class="notice">
+          No data associated with this observation.
+        </p>
       </div>
     </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-12">
-      <h3>Data</h3>
-      {% for data in data %}
-        <div class="panel panel-default observation-data"
-             data-id="{{ data.id }}"
-             data-payload="{{ MEDIA_URL }}{{ data.payload }}"
-             data-start="{{ data.start|date:"U" }}"
-             data-end="{{ data.end|date:"U" }}"
-             data-groundstation="{{ data.ground_station }}">
-          <div class="panel-heading">
-            <h3 class="panel-title">
-              Data payload #{{ data.id }} from {{ data.ground_station }}
-            </h3>
-          </div>
-          <div class="panel-body">
-            {% if data.payload %}
-              <div class="wave" id="data-{{ data.id }}"></div>
-            {% else %}
-              <div class="notice">
-                Waiting for data
-              </div>
-            {% endif %}
-          </div>
-          <div class="panel-footer">
-            <span class="label label-default">Timeframe</span>
-            {{ data.start|date:"Y-m-d H:i:s" }} ~ {{ data.end|date:"Y-m-d H:i:s" }}
-            <a href="{{ MEDIA_URL }}{{ data.payload }}"
-               target="_blank"
-               class="pull-right"
-               download="">
-              <button type="button" class="btn btn-default btn-xs">
-                <span class="glyphicon glyphicon-download"></span> Data
-              </button>
-            </a>
-            <button type="button" class="btn btn-primary btn-xs pull-right playpause">
-              <span class="glyphicon glyphicon-play"></span>
-              <span class="glyphicon glyphicon-pause"></span>
-            </button>
-          </div>
+  {% else %}
+    <div class="row">
+      <div class="col-md-12">
+        <h3>Timeline</h3>
+        <div id="timeline"></div>
+        <div id="hoverRes">
+          <div class="coloredDiv"></div>
+          <div id="name"></div>
+          <div id="scrolled_date"></div>
         </div>
-      {% endfor %}
+      </div>
     </div>
-  </div>
-{% endif %}
+
+    <div class="row">
+      <div class="col-md-12">
+        <h3>Data</h3>
+        {% for data in data %}
+          <div class="panel panel-default observation-data"
+               data-id="{{ data.id }}"
+               data-payload="{{ MEDIA_URL }}{{ data.payload }}"
+               data-start="{{ data.start|date:"U" }}"
+               data-end="{{ data.end|date:"U" }}"
+               data-groundstation="{{ data.ground_station }}">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                Data payload #{{ data.id }} from {{ data.ground_station }}
+              </h3>
+            </div>
+            <div class="panel-body">
+              {% if data.payload %}
+                <div class="wave" id="data-{{ data.id }}"></div>
+              {% else %}
+                <div class="notice">
+                  Waiting for data
+                </div>
+              {% endif %}
+            </div>
+            <div class="panel-footer">
+              <span class="label label-default">Timeframe</span>
+              {{ data.start|date:"Y-m-d H:i:s" }} ~ {{ data.end|date:"Y-m-d H:i:s" }}
+              <a href="{{ MEDIA_URL }}{{ data.payload }}"
+                 target="_blank"
+                 class="pull-right"
+                 download="">
+                <button type="button" class="btn btn-default btn-xs">
+                  <span class="glyphicon glyphicon-download"></span> Data
+                </button>
+              </a>
+              <button type="button" class="btn btn-primary btn-xs pull-right playpause">
+                <span class="glyphicon glyphicon-play"></span>
+                <span class="glyphicon glyphicon-pause"></span>
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
 
 {% endblock content %}
 
 {% block javascript %}
-<script src="{% static 'js/d3.v3.min.js' %}"></script>
-<script src="{% static 'js/d3-timeline.js' %}"></script>
-<script src="{% static 'js/wavesurfer.min.js' %}"></script>
-<script src="{% static 'js/observation_view.js' %}"></script>
+  <script src="{% static 'js/lib/d3.v3.min.js' %}"></script>
+  <script src="{% static 'js/lib/d3-timeline.js' %}"></script>
+  <script src="{% static 'js/lib/wavesurfer.min.js' %}"></script>
+  <script src="{% static 'js/observation_view.js' %}"></script>
 {% endblock javascript %}

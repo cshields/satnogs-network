@@ -1,0 +1,22 @@
+db:
+  image: mariadb:5.5
+  environment:
+  - MYSQL_DATABASE=network
+  - MYSQL_USER=network
+  - MYSQL_PASSWORD=network
+  - MYSQL_ROOT_PASSWORD=toor
+web:
+  build: .
+  ports:
+    - "8000:8000"
+  volumes:
+    - .:/app
+  links:
+    - db
+  environment:
+    - DJANGO_SETTINGS_MODULE=network.settings.dev
+    - DEFAULT_FROM_EMAIL=noreply@example.com
+    - ALLOWED_HOSTS=*
+    - DATABASE_URL=mysql://network:network@db/network
+  command:
+    ./docker/run-fig.sh

@@ -19,7 +19,6 @@ THIRD_PARTY_APPS = (
     'crispy_forms',
     'allauth',
     'allauth.account',
-    'allauth.socialaccount',
 )
 LOCAL_APPS = (
     'network.users',
@@ -36,6 +35,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
 )
 
 # Email
@@ -73,7 +73,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
 
     'allauth.account.context_processors.account',
-    'allauth.socialaccount.context_processors.socialaccount',
+
+    'network.base.context_processors.analytics',
+    'network.base.context_processors.stage_notice',
 )
 TEMPLATE_DIRS = (
     path.join(BASE_DIR, 'templates'),
@@ -96,24 +98,26 @@ STATICFILES_FINDERS = (
 MEDIA_ROOT = path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
-STATION_DEFAULT_IMAGE = '/static/images/dish.png'
+STATION_DEFAULT_IMAGE = '/static/img/dish.png'
 
 # App conf
 ROOT_URLCONF = 'network.urls'
 WSGI_APPLICATION = 'network.wsgi.application'
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 # Auth
 AUTHENTICATION_BACKENDS = (
-    "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 )
-ACCOUNT_AUTHENTICATION_METHOD = "username"
+ACCOUNT_ADAPTER = 'network.users.adapter.NoSignupsAdapter'
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-AUTH_USER_MODEL = "users.User"
-LOGIN_REDIRECT_URL = "users:redirect_user"
-LOGIN_URL = "account_login"
-AUTOSLUG_SLUGIFY_FUNCTION = "slugify.slugify"
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+AUTH_USER_MODEL = 'users.User'
+LOGIN_REDIRECT_URL = 'users:redirect_user'
+LOGIN_URL = 'account_login'
+AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'
 
 # Logging
 LOGGING = {
@@ -147,17 +151,31 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework.filters.DjangoFilterBackend',
     )
 }
 
 # Security
-SECRET_KEY = getenv('DJANGO_SECRET_KEY', 'changeme')
+SECRET_KEY = getenv('SECRET_KEY', 'changeme')
 
 # Database
 import dj_database_url
-DATABASE_URL = getenv('DJANGO_DATABASE_URL', 'sqlite:///db.sqlite3')
+DATABASE_URL = getenv('DATABASE_URL', 'sqlite:///db.sqlite3')
 DATABASES = {'default': dj_database_url.parse(DATABASE_URL)}
 
-REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',)
-}
+# Mapbox API
+MAPBOX_GEOCODE_URL = 'https://api.tiles.mapbox.com/v4/geocode/mapbox.places/'
+MAPBOX_MAP_ID = getenv('MAPBOX_MAP_ID', '')
+MAPBOX_TOKEN = getenv('MAPBOX_TOKEN', '')
+
+# Observations datetimes in minutes
+DATE_MIN_START = '60'
+DATE_MAX_RANGE = '480'
+
+# Station heartbeat in minutes
+STATION_HEARTBEAT_TIME = 60
+
+# DB API
+DB_API_ENDPOINT = getenv('DB_API_ENDPOINT', 'https://db.satnogs.org/api/')
