@@ -18,8 +18,11 @@ from network.base.forms import StationForm
 def index(request):
     """View to render index page."""
     observations = Observation.objects.all()
-    featured_station = Station.objects.filter(active=True).latest('featured_date')
-
+    try:
+        featured_station = Station.objects.filter(active=True).latest('featured_date')
+    except:
+        featured_station = Station.objects.filter(active=False).latest('featured_date')
+    
     ctx = {
         'latest_observations': observations.filter(end__lt=now()),
         'scheduled_observations': observations.filter(end__gte=now()),
