@@ -1,11 +1,11 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.conf.urls import patterns, include, url
-from django.conf.urls.static import static
 
 from django.contrib import admin
 
+
+handler404 = 'network.base.views.custom_404'
+handler500 = 'network.base.views.custom_500'
 
 urlpatterns = patterns(
     '',
@@ -21,4 +21,11 @@ urlpatterns = patterns(
     url(r'^api/', include('network.api.urls'))
 )
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if settings.DEBUG:
+    urlpatterns += patterns(
+        '',
+        url(r'^404/$', handler404),
+        url(r'^500/$', handler500),
+        url(r'^media/(?P<path>.*)$', 'django.views.static.serve',
+            {'document_root': settings.MEDIA_ROOT}),
+    )

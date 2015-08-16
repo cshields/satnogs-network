@@ -5,7 +5,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.timezone import now
 from django.conf import settings
-from django.db.models.signals import post_save
 from django.utils.html import format_html
 
 from network.users.models import User
@@ -19,13 +18,6 @@ ANTENNA_TYPES = (
     ('parabolic', 'Parabolic'),
 )
 MODE_CHOICES = ['FM', 'AFSK', 'BFSK', 'APRS', 'SSTV', 'CW', 'FMN', 'SSTV', 'GMSK', 'SSB']
-
-
-def station_ping(sender, instance, created, **kwargs):
-    if not created:
-        ground_station = Station.objects.get(pk=instance.ground_station.pk)
-        ground_station.last_seen = now()
-        ground_station.save()
 
 
 class Antenna(models.Model):
@@ -71,7 +63,7 @@ class Station(models.Model):
     @property
     def online(self):
         try:
-            heartbeat = self.last_seen + timedelta(minutes=settings.STATION_HEARTBEAT_TIME)
+            heartbeat = self.last_seen + timedelta(minutes=int(settings.STATION_HEARTBEAT_TIME))
             return self.active and heartbeat > now()
         except:
             return False
@@ -102,7 +94,7 @@ class Satellite(models.Model):
         return self.name
 
 
-class Transponder(models.Model):
+class Transmitter(models.Model):
     """Model for antennas transponders."""
     uuid = ShortUUIDField(db_index=True)
     description = models.TextField()
@@ -115,7 +107,7 @@ class Transponder(models.Model):
                             max_length=10, blank=True)
     invert = models.BooleanField(default=False)
     baud = models.FloatField(validators=[MinValueValidator(0)], null=True, blank=True)
-    satellite = models.ForeignKey(Satellite, related_name='transponder',
+    satellite = models.ForeignKey(Satellite, related_name='transmitters',
                                   null=True)
 
     def __unicode__(self):
@@ -125,7 +117,7 @@ class Transponder(models.Model):
 class Observation(models.Model):
     """Model for SatNOGS observations."""
     satellite = models.ForeignKey(Satellite)
-    transponder = models.ForeignKey(Transponder, null=True)
+    transmitter = models.ForeignKey(Transmitter, null=True, related_name='observations')
     author = models.ForeignKey(User)
     start = models.DateTimeField()
     end = models.DateTimeField()
@@ -141,6 +133,10 @@ class Observation(models.Model):
     def is_future(self):
         return self.end > now()
 
+    @property
+    def has_data(self):
+        return self.data_set.exclude(payload='').count()
+
     def __unicode__(self):
         return "%d" % self.id
 
@@ -155,5 +151,3 @@ class Data(models.Model):
 
     class Meta:
         ordering = ['-start', '-end']
-
-post_save.connect(station_ping, sender=Data)

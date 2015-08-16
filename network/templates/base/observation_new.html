@@ -3,10 +3,11 @@
 {% load staticfiles %}
 {% load tags %}
 
-{% block title %}New Observation{% endblock %}
+{% block title %} - New Observation{% endblock %}
 
 {% block css %}
   <link href="{% static 'css/lib/bootstrap-datetimepicker.min.css' %}" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/lib/spinner.css' %}">
 {% endblock css %}
 
 {% block content %}
@@ -34,14 +35,14 @@
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-3 control-label">Transponder</label>
+      <label class="col-sm-3 control-label">Transmitter</label>
       <div class="col-sm-9">
-        <select id="transponder-selection" class="form-control" disabled name="transponder">
-          <option id="no-transponder" value="" disabled selected>No transponder available</option>
-          {% for transponder in transponders %}
-            <option data-satellite="{{ transponder.satellite.norad_cat_id }}"
-                    value="{{ transponder.id }}">
-              {{ transponder.description }} - {% frq transponder.downlink_low %} - {{ transponder.mode }}
+        <select id="transmitter-selection" class="form-control" disabled name="transmitter">
+          <option id="no-transmitter" value="" disabled selected>No transmitter available</option>
+          {% for transmitter in transmitters %}
+            <option data-satellite="{{ transmitter.satellite.norad_cat_id }}"
+                    value="{{ transmitter.id }}">
+              {{ transmitter.description }} - {{ transmitter.downlink_low|frq }} - {{ transmitter.mode }}
             </option>
           {% endfor %}
         </select>
@@ -99,7 +100,9 @@
 <div class="row calculation-result">
   <div class="col-md-12">
     <h3>Calculated Timeline</h3>
-    <div id="timeline"></div>
+    <div id="loading" class="notice">Calculating</div>
+    <div id="timeline">
+    </div>
     <div id="hoverRes">
       <div class="coloredDiv"></div>
       <div id="name"></div>
@@ -111,7 +114,7 @@
 
 <div class="row calculation-result">
   <div class="col-md-12">
-    <button type="submit" id="calculate-observation" class="btn btn-success pull-right">
+    <button type="submit" id="schedule-observation" class="btn btn-success pull-right" disabled="True">
       Schedule Observation
     </button>
   </div>

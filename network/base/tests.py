@@ -6,7 +6,7 @@ from factory import fuzzy
 from django.utils.timezone import now
 
 from network.base.models import (ANTENNA_BANDS, ANTENNA_TYPES, MODE_CHOICES,
-                                 Antenna, Satellite, Station, Transponder, Observation)
+                                 Antenna, Satellite, Station, Transmitter, Observation)
 from network.users.tests import UserFactory
 
 
@@ -59,8 +59,8 @@ class SatelliteFactory(factory.django.DjangoModelFactory):
         model = Satellite
 
 
-class TransponderFactory(factory.django.DjangoModelFactory):
-    """Transponder model factory."""
+class TransmitterFactory(factory.django.DjangoModelFactory):
+    """Transmitter model factory."""
     description = fuzzy.FuzzyText()
     alive = fuzzy.FuzzyChoice(choices=[True, False])
     uplink_low = fuzzy.FuzzyInteger(200000000, 500000000, step=10000)
@@ -73,7 +73,7 @@ class TransponderFactory(factory.django.DjangoModelFactory):
     satellite = factory.SubFactory(SatelliteFactory)
 
     class Meta:
-        model = Transponder
+        model = Transmitter
 
 
 class ObservationFactory(factory.django.DjangoModelFactory):
@@ -85,7 +85,7 @@ class ObservationFactory(factory.django.DjangoModelFactory):
     end = factory.LazyAttribute(
         lambda x: x.start + timedelta(hours=random.randint(1, 8))
     )
-    transponder = factory.SubFactory(TransponderFactory)
+    transmitter = factory.SubFactory(TransmitterFactory)
 
     class Meta:
         model = Observation

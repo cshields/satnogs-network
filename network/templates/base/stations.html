@@ -2,7 +2,7 @@
 {% load tags %}
 {% load staticfiles %}
 
-{% block title %}Ground Stations{% endblock %}
+{% block title %} - Ground Stations{% endblock %}
 
 {% block content %}
   <h1>
@@ -18,9 +18,6 @@
         <thead>
           <th>ID</th>
           <th>Name</th>
-          {% if station.qthlocator %}
-            <th>qthlocator</th>
-          {% endif %}
           <th>Location</th>
           <th>Altitude</th>
           <th>Antenna</th>
@@ -46,17 +43,17 @@
                   {{ station.name }}
                 </a>
               </td>
-              {% if station.qthlocator %}
-                <td title="{{ station.lat|floatformat:-3 }}, {{ station.lng|floatformat:-3 }}">
-                  {{ station.qthlocator }}
-                </td>
-              {% endif %}
               {% if station.location %}
-                <td title="{{ station.lat|floatformat:-3 }}, {{ station.lng|floatformat:-3 }}">
+                <td title="{{ station.lat|floatformat:-3 }}°, {{ station.lng|floatformat:-3 }}°, {{ station.qthlocator }}">
                   {{ station.location }}
                 </td>
               {% else %}
-                <td>{{ station.lat|floatformat:-3 }}, {{ station.lng|floatformat:-3 }}</td>
+                <td>
+                  {{ station.lat|floatformat:-3 }}°, {{ station.lng|floatformat:-3 }}°
+                  {% if station.qthlocator %}
+                    - {{ station.qthlocator }}
+                  {% endif %}
+                </td>
               {% endif %}
               <td>{{ station.alt}} m</td>
               <td>

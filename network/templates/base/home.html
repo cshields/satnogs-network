@@ -3,7 +3,7 @@
 {% load staticfiles %}
 {% load tags %}
 
-{% block title %}Home{% endblock %}
+{% block title %} - Home{% endblock %}
 
 {% block css %}
   <link rel="stylesheet" href="{% static 'css/lib/mapbox.css' %}">
@@ -30,67 +30,69 @@
     {% endif %}
   </div>
   <div class="row">
-    <div class="col-md-4">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <h3 class="panel-title">Featured Ground Station</h3>
-        </div>
-        <div class="panel-body">
-          <div class="text-center">
-            <img src="{{ MEDIA_URL }}{{ featured_station.image }}"
-                 class="img-gs-front"
-                 alt="{{ featured_station.name }}"
-                 title="{{ featured_station.name }}">
-            <h3>
-              <a href="{% url 'base:station_view' id=featured_station.id %}">
-                 {{ featured_station.name }}
-              </a>
-            </h3>
+    {% if featured_station %}
+      <div class="col-md-4">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Featured Ground Station</h3>
           </div>
-          <div class="caption">
-            <div class="gs-front-line">
-              <span class="label label-info">Owner</span>
-              <span class="gs-front-data">
-                <a href="{% url 'users:view_user' username=featured_station.owner.username %}">
-                  {{ featured_station.owner.displayname }}
+          <div class="panel-body">
+            <div class="text-center">
+              <img src="{{ MEDIA_URL }}{{ featured_station.image }}"
+                   class="img-gs-front"
+                   alt="{{ featured_station.name }}"
+                   title="{{ featured_station.name }}">
+              <h3>
+                <a href="{% url 'base:station_view' id=featured_station.id %}">
+                   {{ featured_station.name }}
                 </a>
-              </span>
+              </h3>
             </div>
-            <div class="gs-front-line">
-              <span class="label label-info">Coordinates</span>
-              <span class="gs-front-data">
-                {{ featured_station.lng|floatformat:2 }}°,
-                {{ featured_station.lat|floatformat:2 }}°
-              </span>
-            </div>
-            <div class="gs-front-line">
-              <span class="label label-info">Antennas</span>
-              <span class="gs-front-data">
-                {% for antenna in featured_station.antenna.all %}
-                  {{antenna.band}} {{ antenna.antenna_type }}{% if forloop.last %}{% else %},{% endif %}
-                {% endfor %}
-              </span>
-            </div>
-            <!--
-            <div class="gs-front-line">
-              <span class="label label-info">Success Rate</span>
-              <span class="gs-front-data">
-                <div class="progress">
-                  <div class="progress-bar progress-bar-success" style="width: 88%">
-                    <span class="sr-only">88% Complete (success)</span>
+            <div class="caption">
+              <div class="gs-front-line">
+                <span class="label label-info">Owner</span>
+                <span class="gs-front-data">
+                  <a href="{% url 'users:view_user' username=featured_station.owner.username %}">
+                    {{ featured_station.owner.displayname }}
+                  </a>
+                </span>
+              </div>
+              <div class="gs-front-line">
+                <span class="label label-info">Coordinates</span>
+                <span class="gs-front-data">
+                  {{ featured_station.lng|floatformat:2 }}°,
+                  {{ featured_station.lat|floatformat:2 }}°
+                </span>
+              </div>
+              <div class="gs-front-line">
+                <span class="label label-info">Antennas</span>
+                <span class="gs-front-data">
+                  {% for antenna in featured_station.antenna.all %}
+                    {{antenna.band}} {{ antenna.antenna_type }}{% if forloop.last %}{% else %},{% endif %}
+                  {% endfor %}
+                </span>
+              </div>
+              <!--
+              <div class="gs-front-line">
+                <span class="label label-info">Success Rate</span>
+                <span class="gs-front-data">
+                  <div class="progress">
+                    <div class="progress-bar progress-bar-success" style="width: 88%">
+                      <span class="sr-only">88% Complete (success)</span>
+                    </div>
+                    <div class="progress-bar progress-bar-danger" style="width: 12%">
+                      <span class="sr-only">12% Complete (danger)</span>
+                    </div>
                   </div>
-                  <div class="progress-bar progress-bar-danger" style="width: 12%">
-                    <span class="sr-only">12% Complete (danger)</span>
-                  </div>
-                </div>
-              </span>
+                </span>
+              </div>
+              -->
             </div>
-            -->
           </div>
         </div>
       </div>
-    </div>
-    <div class="col-md-8">
+    {% endif %}
+    <div class="{% if featured_station %}col-md-8{% else %}col-md-12{% endif %}">
       <ul class="nav nav-tabs" role="tablist">
         <li class="active">
           <a href="#successful" class="toggle" role="tab" data-toggle="tab">Latest Observations</a>
@@ -126,8 +128,8 @@
                     </a>
                   </td>
                   <td>{{ observation.satellite.name }}</td>
-                  <td>{% frq observation.transponder.downlink_low %}</td>
-                  <td>{{ observation.transponder.mode }}</td>
+                  <td>{{ observation.transmitter.downlink_low|frq }}</td>
+                  <td>{{ observation.transmitter.mode }}</td>
                   <td>
                     {{ observation.start|date:"Y-m-d H:i:s" }}<br>
                     {{ observation.end|date:"Y-m-d H:i:s" }}
@@ -163,8 +165,8 @@
                     </a>
                   </td>
                   <td>{{ observation.satellite.name }}</td>
-                  <td>{% frq observation.transponder.downlink_low %}</td>
-                  <td>{{ observation.transponder.mode }}</td>
+                  <td>{{ observation.transmitter.downlink_low|frq }}</td>
+                  <td>{{ observation.transmitter.mode }}</td>
                   <td>{{ observation.start|date:"Y-m-d H:i:s" }}</br>{{ observation.end|date:"Y-m-d H:i:s" }}</td>
                   <td>{{ observation.author.displayname }}</td>
                 </tr>

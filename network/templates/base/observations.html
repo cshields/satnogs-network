@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load tags %}
 
-{% block title %}Observations{% endblock %}
+{% block title %} - Observations{% endblock %}
 
 {% block content %}
   <h1>
@@ -28,18 +28,18 @@
               <td>
                 <a href="{% url 'base:observation_view' id=observation.id %}">
                   <span class="label
-                               {% if not observation.data_set.all %}
-                                label-danger
-                               {% else %}
+                               {% if observation.has_data %}
                                 label-success
+                               {% else %}
+                                label-danger
                                {% endif %}">
                     {{ observation.id }}
                   </span>
                 </a>
               </td>
               <td>{{ observation.satellite.name }}</td>
-              <td>{% frq observation.transponder.downlink_low %}</td>
-              <td>{{ observation.transponder.mode }}</td>
+              <td>{{ observation.transmitters.downlink_low|frq }}</td>
+              <td>{{ observation.transmitters.mode }}</td>
               <td>{{ observation.start|date:"Y-m-d H:i:s" }}</br>{{ observation.end|date:"Y-m-d H:i:s" }}</td>
               <td>
                 <a href="{% url 'users:view_user' username=observation.author.username %}">

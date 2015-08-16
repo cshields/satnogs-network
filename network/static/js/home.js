@@ -12,8 +12,8 @@ $(document).ready(function() {
     var LocLayer = L.mapbox.featureLayer().addTo(map);
 
     $('#successful a.toggle').click(function (e) {
-        e.preventDefault()
-        $(this).tab('show')
+        e.preventDefault();
+        $(this).tab('show');
     })
 
     $.ajax({

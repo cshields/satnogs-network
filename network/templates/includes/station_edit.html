@@ -64,7 +64,7 @@
               <select multiple class="form-control" name="antenna">
                 {% for antenna in antennas %}
                   <option value="{{ antenna.id }}">
-                    {{ antenna.band }} - {{ antenna.antenna_type }} - {% frq antenna.frequency %}
+                    {{ antenna.band }} - {{ antenna.antenna_type }} - {{ antenna.frequency|frq }}
                   </option>
                 {% endfor %}
               </select>

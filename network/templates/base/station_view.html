@@ -3,7 +3,7 @@
 
 {% load staticfiles %}
 
-{% block title %}Ground Station {{ station.name }}{% endblock %}
+{% block title %} - Ground Station {{ station.name }}{% endblock %}
 
 {% block css %}
   <link rel="stylesheet" href="{% static 'css/lib/mapbox.css' %}">
@@ -18,11 +18,6 @@
           data-lng="{{ station.lng }}"
           data-lat="{{ station.lat }}">
         {{ station.id }} - {{ station.name }}
-        {% if station.online %}
-          <span class="label label-success">Online</span>
-        {% else %}
-          <span class="label label-danger">Offline</button>
-        {% endif %}
       </h2>
     </div>
     <div class="col-md-6 text-right">
@@ -33,7 +28,6 @@
       </h2>
     </div>
   </div>
-
   <div class="row">
     <div class="col-md-4">
       <div class="gs-front-line">
@@ -63,7 +57,7 @@
       <div class="gs-front-line">
         <span class="label label-default">Coordinates</span>
         <span class="gs-front-data">
-          {{ station.lat|floatformat:-3 }}, {{ station.lng|floatformat:-3 }}
+          {{ station.lat|floatformat:-3 }}°, {{ station.lng|floatformat:-3 }}°
         </span>
       </div>
       <div class="gs-front-line">
@@ -80,10 +74,14 @@
         </span>
       </div>
       <div class="gs-front-line">
-        <span class="label label-default">Last Seen</span>
+        {% if station.online %}
+          <span class="label label-success">Online</span>
+        {% else %}
+          <span class="label label-danger">Offline</span>
+        {% endif %}
         <span class="gs-front-data"
               title="{{ station.last_seen|date:"c" }}">
-          {{ station.last_seen|timesince }} ago
+          Last seen {{ station.last_seen|timesince }} ago
         </span>
       </div>
     </div>
@@ -94,7 +92,7 @@
         </div>
         <div class="panel panel-default">
           <div class="panel-body">
-            {{ antenna.band }} - {{ antenna.antenna_type }} - {% frq antenna.frequency %}
+            {{ antenna.band }} - {{ antenna.antenna_type }} - {{ antenna.frequency|frq }}
           </div>
         </div>
       {% empty %}

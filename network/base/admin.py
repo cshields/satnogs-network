@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from network.base.models import (Antenna, Satellite, Station, Transponder,
+from network.base.models import (Antenna, Satellite, Station, Transmitter,
                                  Observation, Data)
 
 
@@ -24,7 +24,7 @@ class SatelliteAdmin(admin.ModelAdmin):
         return obj.updated.strftime('%d.%m.%Y, %H:%M')
 
 
-class TransponderAdmin(admin.ModelAdmin):
+class TransmitterAdmin(admin.ModelAdmin):
     list_display = ('uuid', 'description', 'satellite', 'uplink_low',
                     'uplink_high', 'downlink_low', 'downlink_high')
     search_fields = ('satellite', 'uuid')
@@ -32,7 +32,7 @@ class TransponderAdmin(admin.ModelAdmin):
 
 
 class ObservationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'author', 'satellite', 'transponder', 'start_date', 'end_date')
+    list_display = ('id', 'author', 'satellite', 'transmitter', 'start_date', 'end_date')
     list_filter = ('start', 'end')
     search_fields = ('satellite', 'author')
 
@@ -45,7 +45,6 @@ class ObservationAdmin(admin.ModelAdmin):
 
 class DataAdmin(admin.ModelAdmin):
     list_display = ('id', 'start_date', 'end_date', 'observation', 'ground_station')
-    exclude = ('payload', )
     readonly_fields = ('observation', 'ground_station')
 
     def start_date(self, obj):
@@ -58,6 +57,6 @@ class DataAdmin(admin.ModelAdmin):
 admin.site.register(Antenna, AntennaAdmin)
 admin.site.register(Satellite, SatelliteAdmin)
 admin.site.register(Station, StationAdmin)
-admin.site.register(Transponder, TransponderAdmin)
+admin.site.register(Transmitter, TransmitterAdmin)
 admin.site.register(Observation, ObservationAdmin)
 admin.site.register(Data, DataAdmin)

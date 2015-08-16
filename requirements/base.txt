@@ -7,6 +7,7 @@ unicode-slugify==0.1.3
 django-autoslug==1.7.2
 django_dotenv==1.3.0
 dj-database-url==0.3.0
+opbeat==3.0.2
 
 # Security
 django-braces==1.4.0
@@ -15,7 +16,7 @@ django-braces==1.4.0
 Pillow==2.8.1
 
 # Users
--e git+https://github.com/comzeradd/django-allauth.git@migration#egg=allauth
+django-allauth==0.20.0
 -e git+https://github.com/comzeradd/django-avatar.git@gravatar_https#egg=avatar
 django-crispy-forms==1.4.0
 

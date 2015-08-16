@@ -3,7 +3,7 @@
 {% load static %}
 {% load tags %}
 
-{% block title %}User: {{ user.username }}{% endblock %}
+{% block title %} - User: {{ user.username }}{% endblock %}
 
 {% block content %}
   <div class="row">
@@ -85,15 +85,15 @@
     </div>
   {% endif %}
 
-  <div class="row">
-    <div class="col-md-12">
-      {% if user == request.user %}
+  {% if user == request.user %}
+    <div class="row">
+      <div class="col-md-12">
         <button class="btn btn-default" data-toggle="modal" data-target="#StationModal">Add Ground Station</button>
         <!-- Station Modal -->
         {% include 'includes/station_edit.html' %}
-      {% endif %}
+      </div>
     </div>
-  </div>
+  {% endif %}
 
   <div class="row">
     <div class="col-sm-12">
@@ -128,8 +128,8 @@
                   </a>
                 </td>
                 <td>{{ observation.satellite.name }}</td>
-                <td>{% frq observation.transponder.downlink_low %}</td>
-                <td>{{ observation.transponder.mode }}</td>
+                <td>{{ observation.transmitters.downlink_low|frq }}</td>
+                <td>{{ observation.transmitters.mode }}</td>
                 <td>{{ observation.start|date:"Y-m-d H:i:s" }}</br>{{ observation.end|date:"Y-m-d H:i:s" }}</td>
               </tr>
             {% endfor %}
@@ -141,6 +141,14 @@
     <div class="row">
       <div class="col-md-12 notice">
         <p>{{ user.displayname }} is not an author of any observation.</p>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if user == request.user %}
+    <div class="row">
+      <div class="col-md-12">
+        <a class="btn btn-default" href="{% url 'base:observation_new' %}">New Observation</a>
       </div>
     </div>
   {% endif %}

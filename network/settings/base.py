@@ -1,7 +1,6 @@
 from os import path, getenv
 BASE_DIR = path.dirname(path.dirname(__file__))
 
-
 # Apps
 DJANGO_APPS = (
     'django.contrib.auth',
@@ -41,7 +40,10 @@ MIDDLEWARE_CLASSES = (
 # Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 ADMINS = (
-    ('SatNOGS team', 'info@satnogs.org'),
+    (
+        getenv('ADMINS_FROM_NAME', 'Admins'),
+        getenv('ADMINS_FROM_EMAIL', 'noreply@example.com')
+    ),
 )
 MANAGERS = ADMINS
 
@@ -57,8 +59,8 @@ CACHES = {
 TIME_ZONE = 'UTC'
 LANGUAGE_CODE = 'en-us'
 SITE_ID = 1
-USE_I18N = True
-USE_L10N = True
+USE_I18N = False
+USE_L10N = False
 USE_TZ = True
 
 # Templates
@@ -95,7 +97,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
-MEDIA_ROOT = path.join(BASE_DIR, 'media')
+MEDIA_ROOT = path.join(path.dirname(BASE_DIR), 'media')
 MEDIA_URL = '/media/'
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 STATION_DEFAULT_IMAGE = '/static/img/dish.png'
@@ -110,7 +112,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 )
-ACCOUNT_ADAPTER = 'network.users.adapter.NoSignupsAdapter'
+ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
@@ -123,23 +125,48 @@ AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s - %(process)d %(thread)d - %(message)s'
+        },
+    },
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
     'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+        'opbeat': {
+            'level': 'WARNING',
             'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
+            'class': 'opbeat.contrib.django.handlers.OpbeatHandler',
+        },
     },
     'loggers': {
         'django.request': {
-            'handlers': ['mail_admins'],
+            'handlers': ['opbeat'],
             'level': 'ERROR',
             'propagate': True,
+        },
+        'django.network.backends': {
+            'level': 'ERROR',
+            'handlers': ['opbeat'],
+            'propagate': False,
+        },
+        'network': {
+            'level': 'WARNING',
+            'handlers': ['opbeat'],
+            'propagate': False,
+        },
+        'opbeat.errors': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
         },
     }
 }
@@ -171,11 +198,11 @@ MAPBOX_MAP_ID = getenv('MAPBOX_MAP_ID', '')
 MAPBOX_TOKEN = getenv('MAPBOX_TOKEN', '')
 
 # Observations datetimes in minutes
-DATE_MIN_START = '60'
+DATE_MIN_START = '15'
 DATE_MAX_RANGE = '480'
 
 # Station heartbeat in minutes
-STATION_HEARTBEAT_TIME = 60
+STATION_HEARTBEAT_TIME = getenv('STATION_HEARTBEAT_TIME', 60)
 
 # DB API
 DB_API_ENDPOINT = getenv('DB_API_ENDPOINT', 'https://db.satnogs.org/api/')
