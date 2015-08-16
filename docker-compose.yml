@@ -19,4 +19,4 @@ web:
     - ALLOWED_HOSTS=*
     - DATABASE_URL=mysql://network:network@db/network
   command:
-    ./docker/run-fig.sh
+    ./docker/run-compose.sh

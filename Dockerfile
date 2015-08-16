@@ -1,9 +1,6 @@
-FROM centos:7
-RUN yum makecache
-RUN yum -y install epel-release
-RUN yum -y install python python-pip python-devel git gcc libjpeg-turbo-devel \
-                   libxml2-devel libxslt-devel mysql-devel mysql
-RUN yum -y clean all
+FROM python2.7
+RUN apt-get install libjpeg-turbo8-dev libxml2-dev libxslt1-dev mysql-client \
+                    libmysqlclient-dev git gcc
 
 COPY ./requirements/ /tmp/requirements/
 RUN pip install -r /tmp/requirements/docker.txt
