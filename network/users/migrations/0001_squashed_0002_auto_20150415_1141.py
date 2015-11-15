@@ -9,8 +9,6 @@ import django.core.validators
 
 class Migration(migrations.Migration):
 
-    replaces = [(b'users', '0001_initial'), (b'users', '0002_auto_20150415_1141')]
-
     dependencies = [
         ('auth', '0001_initial'),
     ]

@@ -1,9 +1,7 @@
 from django.core.urlresolvers import reverse
 from django.shortcuts import render
-from django.views.generic import DetailView
 from django.views.generic import RedirectView
 from django.views.generic import UpdateView
-from django.views.generic import ListView
 
 from braces.views import LoginRequiredMixin
 
@@ -13,12 +11,6 @@ from network.users.forms import UserForm
 from network.users.models import User
 from network.base.forms import StationForm
 from network.base.models import Station, Observation, Antenna
-
-
-class UserDetailView(LoginRequiredMixin, DetailView):
-    model = User
-    slug_field = "username"
-    slug_url_kwarg = "username"
 
 
 class UserRedirectView(LoginRequiredMixin, RedirectView):
@@ -41,12 +33,6 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_object(self):
         return User.objects.get(username=self.request.user.username)
-
-
-class UserListView(LoginRequiredMixin, ListView):
-    model = User
-    slug_field = "username"
-    slug_url_kwarg = "username"
 
 
 def view_user(request, username):

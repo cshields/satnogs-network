@@ -5,7 +5,7 @@ from rest_framework import viewsets, mixins
 
 from network.api.perms import StationOwnerCanEditPermission
 from network.api import serializers, filters
-from network.base.models import Data
+from network.base.models import Data, Station
 
 
 class DataView(viewsets.ModelViewSet, mixins.UpdateModelMixin):

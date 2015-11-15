@@ -20,7 +20,7 @@
           <th>Name</th>
           <th>Location</th>
           <th>Altitude</th>
-          <th>Antenna</th>
+          <th>Antennas</th>
           <th>Owner</th>
         </thead>
         <tbody>
@@ -58,7 +58,7 @@
               <td>{{ station.alt}} m</td>
               <td>
                 {% for antenna in station.antenna.all %}
-                  {{ antenna.antenna_type}} on {{ antenna.frequency }} ({{ antenna.band}})<br>
+                  {{ antenna.antenna_type}} on {{ antenna.frequency }} MHz ({{ antenna.band}})<br>
                 {% endfor %}
               </td>
               <td>

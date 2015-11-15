@@ -1,3 +1,4 @@
+import urllib2
 import ephem
 from datetime import datetime, timedelta
 from StringIO import StringIO
@@ -8,14 +9,51 @@ from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now, make_aware, utc
+from django.utils.text import slugify
 from django.http import JsonResponse, HttpResponseNotFound, HttpResponseServerError, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.core.management import call_command
+
+from rest_framework import serializers, viewsets
 
 from network.base.models import (Station, Transmitter, Observation,
                                  Data, Satellite, Antenna)
 from network.base.forms import StationForm
 from network.base.decorators import admin_required
+
+
+class StationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Station
+        fields = ('name', 'lat', 'lng')
+
+
+class StationAllView(viewsets.ReadOnlyModelViewSet):
+    queryset = Station.objects.all()
+    serializer_class = StationSerializer
+
+
+def _resolve_overlaps(station, start, end):
+    data = Data.objects.filter(ground_station=station)
+
+    if data:
+        for datum in data:
+            if datum.is_past:
+                continue
+            if datum.start <= end and start <= datum.end:
+                if datum.start <= start and datum.end >= end:
+                    return False
+                if start < datum.start and end > datum.end:
+                    start1 = start
+                    end1 = datum.start
+                    start2 = datum.end
+                    end2 = end
+                    return start1, end1, start2, end2
+                if datum.start <= start:
+                    start = datum.end
+                if datum.end >= end:
+                    end = datum.start
+    return start, end
 
 
 def index(request):
@@ -126,7 +164,8 @@ def observation_new(request):
 
 def prediction_windows(request, sat_id, start_date, end_date):
     try:
-        sat = Satellite.objects.filter(transmitters__alive=True).distinct().get(norad_cat_id=sat_id)
+        sat = Satellite.objects.filter(transmitters__alive=True). \
+            distinct().get(norad_cat_id=sat_id)
     except:
         data = {
             'error': 'You should select a Satellite first.'
@@ -159,14 +198,6 @@ def prediction_windows(request, sat_id, start_date, end_date):
                 break
 
             if ephem.Date(tr).datetime() < end_date:
-                if not station_match:
-                    station_windows = {
-                        'id': station.id,
-                        'name': station.name,
-                        'window': []
-                    }
-                    station_match = True
-
                 if ephem.Date(ts).datetime() > end_date:
                     ts = end_date
                     keep_digging = False
@@ -174,12 +205,38 @@ def prediction_windows(request, sat_id, start_date, end_date):
                     time_start_new = ephem.Date(ts).datetime() + timedelta(minutes=1)
                     observer.date = time_start_new.strftime("%Y-%m-%d %H:%M:%S.%f")
 
-                station_windows['window'].append(
-                    {
-                        'start': ephem.Date(tr).datetime().strftime("%Y-%m-%d %H:%M:%S.%f"),
-                        'end': ephem.Date(ts).datetime().strftime("%Y-%m-%d %H:%M:%S.%f"),
-                        'az_start': azr
-                    })
+                # Adjust or discard window if overlaps exist
+                window_start = make_aware(ephem.Date(tr).datetime(), utc)
+                window_end = make_aware(ephem.Date(ts).datetime(), utc)
+                window = _resolve_overlaps(station, window_start, window_end)
+                if window:
+                    if not station_match:
+                        station_windows = {
+                            'id': station.id,
+                            'name': station.name,
+                            'window': []
+                        }
+                        station_match = True
+                    window_start = window[0]
+                    window_end = window[1]
+                    station_windows['window'].append(
+                        {
+                            'start': window_start.strftime("%Y-%m-%d %H:%M:%S.%f"),
+                            'end': window_end.strftime("%Y-%m-%d %H:%M:%S.%f"),
+                            'az_start': azr
+                        })
+                    # In case our window was split in two
+                    try:
+                        window_start = window[2]
+                        window_end = window[3]
+                        station_windows['window'].append(
+                            {
+                                'start': window_start.strftime("%Y-%m-%d %H:%M:%S.%f"),
+                                'end': window_end.strftime("%Y-%m-%d %H:%M:%S.%f"),
+                                'az_start': azr
+                            })
+                    except:
+                        pass
 
             else:
                 # window start outside of window bounds
@@ -196,8 +253,41 @@ def observation_view(request, id):
     observation = get_object_or_404(Observation, id=id)
     data = Data.objects.filter(observation=observation)
 
+    if settings.ENVIRONMENT == 'production':
+        discuss_slug = 'https://community.satnogs.org/t/observation-{0}-{1}-{2}' \
+            .format(observation.id, slugify(observation.satellite.name),
+                    observation.satellite.norad_cat_id)
+        discuss_url = ('https://community.satnogs.org/new-topic?title=Observation {0}: {1} ({2})'
+                       '&body=Regarding [Observation {3}](http://{4}{5}) ...&category=observations') \
+            .format(observation.id, observation.satellite.name,
+                    observation.satellite.norad_cat_id, observation.id,
+                    request.get_host(), request.path)
+        try:
+            apiurl = '{0}.json'.format(discuss_slug)
+            urllib2.urlopen(apiurl).read()
+            has_comments = True
+        except:
+            has_comments = False
+
+        return render(request, 'base/observation_view.html',
+                      {'observation': observation, 'data': data, 'has_comments': has_comments,
+                       'discuss_url': discuss_url, 'discuss_slug': discuss_slug})
+
     return render(request, 'base/observation_view.html',
                   {'observation': observation, 'data': data})
+
+
+@login_required
+def observation_delete(request, id):
+    """View for deleting observation."""
+    me = request.user
+    observation = get_object_or_404(Observation, id=id)
+    if observation.author == me and observation.is_deletable:
+        observation.delete()
+        messages.success(request, 'Observation deleted successfully.')
+    else:
+        messages.error(request, 'Permission denied.')
+    return redirect(reverse('base:observations_list'))
 
 
 def stations_list(request):
@@ -246,3 +336,13 @@ def station_edit(request):
     else:
         messages.error(request, 'Some fields missing on the form')
         return redirect(reverse('users:view_user', kwargs={'username': request.user.username}))
+
+
+@login_required
+def station_delete(request, id):
+    """View for deleting a station."""
+    me = request.user
+    station = get_object_or_404(Station, id=id, owner=request.user)
+    station.delete()
+    messages.success(request, 'Ground Station deleted successfully.')
+    return redirect(reverse('users:view_user', kwargs={'username': me}))

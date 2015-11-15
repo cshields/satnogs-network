@@ -38,8 +38,8 @@
                 </a>
               </td>
               <td>{{ observation.satellite.name }}</td>
-              <td>{{ observation.transmitters.downlink_low|frq }}</td>
-              <td>{{ observation.transmitters.mode }}</td>
+              <td>{{ observation.transmitter.downlink_low|frq }}</td>
+              <td>{{ observation.transmitter.mode|default:"-" }}</td>
               <td>{{ observation.start|date:"Y-m-d H:i:s" }}</br>{{ observation.end|date:"Y-m-d H:i:s" }}</td>
               <td>
                 <a href="{% url 'users:view_user' username=observation.author.username %}">

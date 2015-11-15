@@ -5,9 +5,17 @@ import factory
 from factory import fuzzy
 from django.utils.timezone import now
 
-from network.base.models import (ANTENNA_BANDS, ANTENNA_TYPES, MODE_CHOICES,
-                                 Antenna, Satellite, Station, Transmitter, Observation)
+from network.base.models import (ANTENNA_BANDS, ANTENNA_TYPES, Mode, Antenna,
+                                 Satellite, Station, Transmitter, Observation)
 from network.users.tests import UserFactory
+
+
+class ModeFactory(factory.django.DjangoModelFactory):
+    """Antenna model factory."""
+    name = fuzzy.FuzzyText()
+
+    class Meta:
+        model = Mode
 
 
 class AntennaFactory(factory.django.DjangoModelFactory):
@@ -39,7 +47,8 @@ class StationFactory(factory.django.DjangoModelFactory):
 
         if extracted:
             for antenna in extracted:
-                self.antenna.add(antenna)
+                if random.randint(0, 1):
+                    self.antenna.add(antenna)
 
     class Meta:
         model = Station
@@ -67,7 +76,7 @@ class TransmitterFactory(factory.django.DjangoModelFactory):
     uplink_high = fuzzy.FuzzyInteger(200000000, 500000000, step=10000)
     downlink_low = fuzzy.FuzzyInteger(200000000, 500000000, step=10000)
     downlink_high = fuzzy.FuzzyInteger(200000000, 500000000, step=10000)
-    mode = fuzzy.FuzzyChoice(choices=MODE_CHOICES)
+    mode = factory.SubFactory(ModeFactory)
     invert = fuzzy.FuzzyChoice(choices=[True, False])
     baud = fuzzy.FuzzyInteger(4000, 22000, step=1000)
     satellite = factory.SubFactory(SatelliteFactory)
@@ -85,7 +94,7 @@ class ObservationFactory(factory.django.DjangoModelFactory):
     end = factory.LazyAttribute(
         lambda x: x.start + timedelta(hours=random.randint(1, 8))
     )
-    transmitter = factory.SubFactory(TransmitterFactory)
+    transmitter = factory.Iterator(Transmitter.objects.all())
 
     class Meta:
         model = Observation

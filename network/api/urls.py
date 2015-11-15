@@ -1,16 +1,10 @@
-from django.conf.urls import patterns, url, include
 from rest_framework import routers
-
 from network.api import views
 
 
 router = routers.DefaultRouter()
 
-router.register(r'data', views.DataView)
-router.register(r'jobs', views.JobView)
+router.register(r'jobs', views.JobView, base_name='jobs')
+router.register(r'data', views.DataView, base_name='data')
 
-
-urlpatterns = patterns(
-    '',
-    url(r'^', include(router.urls))
-)
+urlpatterns = router.urls

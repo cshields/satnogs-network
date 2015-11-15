@@ -1,0 +1,29 @@
+[
+{
+    "fields": {
+        "antenna_type": "yagi",
+        "band": "VHF",
+        "frequency": 144.8
+    },
+    "model": "base.antenna",
+    "pk": 1
+},
+{
+    "fields": {
+        "antenna_type": "yagi",
+        "band": "UHF",
+        "frequency": 433.0
+    },
+    "model": "base.antenna",
+    "pk": 2
+},
+{
+    "fields": {
+        "antenna_type": "dipole",
+        "band": "HF",
+        "frequency": 433.0
+    },
+    "model": "base.antenna",
+    "pk": 3
+}
+]

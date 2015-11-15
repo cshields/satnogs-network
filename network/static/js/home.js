@@ -3,6 +3,7 @@ $(document).ready(function() {
 
     var mapboxid = $('div#map').data('mapboxid');
     var mapboxtoken = $('div#map').data('mapboxtoken');
+    var stations = $('div#map').data('stations');
 
     L.mapbox.accessToken = mapboxtoken;
     L.mapbox.config.FORCE_HTTPS = true;
@@ -10,14 +11,9 @@ $(document).ready(function() {
         zoomControl: false
     }).setView([40, 0], 3);
     var LocLayer = L.mapbox.featureLayer().addTo(map);
-
-    $('#successful a.toggle').click(function (e) {
-        e.preventDefault();
-        $(this).tab('show');
-    })
-
+    
     $.ajax({
-        url: '/api/stations/?format=json'
+        url: stations
     }).done(function(data) {
         data.forEach(function(m) {
             L.mapbox.featureLayer({

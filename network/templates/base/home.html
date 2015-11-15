@@ -10,7 +10,7 @@
 {% endblock css %}
 
 {% block prenav-content %}
-  <div id="map" data-mapboxid="{{ mapbox_id }}" data-mapboxtoken="{{ mapbox_token }}"></div>
+  <div id="map" data-mapboxid="{{ mapbox_id }}" data-mapboxtoken="{{ mapbox_token }}" data-stations="{% url 'base:stations_all' %}"></div>
 {% endblock prenav-content %}
 
 {% block content %}
@@ -72,21 +72,21 @@
                   {% endfor %}
                 </span>
               </div>
-              <!--
-              <div class="gs-front-line">
-                <span class="label label-info">Success Rate</span>
-                <span class="gs-front-data">
-                  <div class="progress">
-                    <div class="progress-bar progress-bar-success" style="width: 88%">
-                      <span class="sr-only">88% Complete (success)</span>
+              {% if featured_station.success_rate %}
+                <div class="gs-front-line">
+                  <span class="label label-info">Success Rate</span>
+                  <span class="gs-front-data">
+                    <div class="progress" title="{{ featured_station.success_rate }}%">
+                      <div class="progress-bar progress-bar-success" style="width: {{ featured_station.success_rate }}%">
+                        <span class="sr-only">{{ featured_station.success_rate }}% Complete (success)</span>
+                      </div>
+                      <div class="progress-bar progress-bar-danger" style="width: {{ featured_station.success_rate|percentagerest }}%">
+                        <span class="sr-only">{{ featured_station.success_rate|percentagerest }}% Complete (danger)</span>
+                      </div>
                     </div>
-                    <div class="progress-bar progress-bar-danger" style="width: 12%">
-                      <span class="sr-only">12% Complete (danger)</span>
-                    </div>
-                  </div>
-                </span>
-              </div>
-              -->
+                  </span>
+                </div>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -95,14 +95,14 @@
     <div class="{% if featured_station %}col-md-8{% else %}col-md-12{% endif %}">
       <ul class="nav nav-tabs" role="tablist">
         <li class="active">
-          <a href="#successful" class="toggle" role="tab" data-toggle="tab">Latest Observations</a>
+          <a href="#latest" class="toggle" role="tab" data-toggle="tab">Latest Observations</a>
         </li>
         <li>
           <a href="#scheduled" class="toggle" role="tab" data-toggle="tab">Scheduled Observations</a>
         </li>
       </ul>
       <div class="tab-content">
-        <div class="tab-pane active" id="successful">
+        <div class="tab-pane active" id="latest">
           <table class="table table-hover">
             <thead>
               <th>ID</th>
@@ -118,10 +118,10 @@
                   <td>
                     <a href="{% url 'base:observation_view' id=observation.id %}">
                       <span class="label
-                                   {% if not observation.data_set.all %}
-                                    label-danger
-                                   {% else %}
+                                   {% if observation.has_data %}
                                     label-success
+                                   {% else %}
+                                    label-danger
                                    {% endif %}">
                         {{ observation.id }}
                       </span>
@@ -129,7 +129,7 @@
                   </td>
                   <td>{{ observation.satellite.name }}</td>
                   <td>{{ observation.transmitter.downlink_low|frq }}</td>
-                  <td>{{ observation.transmitter.mode }}</td>
+                  <td>{{ observation.transmitter.mode|default:"-" }}</td>
                   <td>
                     {{ observation.start|date:"Y-m-d H:i:s" }}<br>
                     {{ observation.end|date:"Y-m-d H:i:s" }}

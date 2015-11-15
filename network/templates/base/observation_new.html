@@ -7,7 +7,6 @@
 
 {% block css %}
   <link href="{% static 'css/lib/bootstrap-datetimepicker.min.css' %}" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/lib/spinner.css' %}">
 {% endblock css %}
 
 {% block content %}
@@ -42,7 +41,7 @@
           {% for transmitter in transmitters %}
             <option data-satellite="{{ transmitter.satellite.norad_cat_id }}"
                     value="{{ transmitter.id }}">
-              {{ transmitter.description }} - {{ transmitter.downlink_low|frq }} - {{ transmitter.mode }}
+              {{ transmitter.description }} - {{ transmitter.downlink_low|frq }} - {{ transmitter.mode|default:"" }}
             </option>
           {% endfor %}
         </select>

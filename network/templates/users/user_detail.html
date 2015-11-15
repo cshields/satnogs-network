@@ -11,8 +11,8 @@
       <h2>{% avatar user 50 %} {{ user.displayname }}
         {% if user == request.user %}
           <div class="pull-right edit-profile-buttons">
-            <a class="btn btn-primary" href="{% url 'users:update_user' %}">My Info</a>
-            <a class="btn btn-primary" href="{% url 'account_email' %}">E-Mail</a>
+            <a class="btn btn-primary" href="{% url 'users:update_user' %}">Settings</a>
+            <a class="btn btn-primary" href="{% url 'account_email' %}">Email</a>
             <a class="btn btn-primary" href="{% url 'avatar_change' %}">Avatar</a>
             <a class="btn btn-info" data-toggle="modal" data-target="#APIModal" href="#">API Key</a>
           </div>
@@ -22,7 +22,7 @@
   </div>
 
   <div class="row">
-    <div class="col-sm-12">
+    <div class="col-md-12">
       <h3>Ground Stations</h3>
     </div>
   </div>
@@ -96,7 +96,7 @@
   {% endif %}
 
   <div class="row">
-    <div class="col-sm-12">
+    <div class="col-md-12">
       <h3>Observations</h3>
     </div>
   </div>
@@ -118,10 +118,10 @@
                 <td>
                   <a href="{% url 'base:observation_view' id=observation.id %}">
                     <span class="label
-                                 {% if not observation.data_set.all %}
-                                  label-danger
-                                 {% else %}
+                                 {% if observation.has_data %}
                                   label-success
+                                 {% else %}
+                                  label-danger
                                  {% endif %}">
                       {{ observation.id }}
                     </span>

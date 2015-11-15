@@ -18,6 +18,7 @@ THIRD_PARTY_APPS = (
     'crispy_forms',
     'allauth',
     'allauth.account',
+    'compressor',
 )
 LOCAL_APPS = (
     'network.users',
@@ -96,11 +97,13 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder',
 )
 MEDIA_ROOT = path.join(path.dirname(BASE_DIR), 'media')
 MEDIA_URL = '/media/'
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 STATION_DEFAULT_IMAGE = '/static/img/dish.png'
+SATELLITE_DEFAULT_IMAGE = '/static/img/sat.png'
 
 # App conf
 ROOT_URLCONF = 'network.urls'
@@ -203,6 +206,7 @@ DATE_MAX_RANGE = '480'
 
 # Station heartbeat in minutes
 STATION_HEARTBEAT_TIME = getenv('STATION_HEARTBEAT_TIME', 60)
+OBSERVATION_MAX_DELETION_RANGE = getenv('OBSERVATION_MAX_DELETION_RANGE', 10)
 
 # DB API
 DB_API_ENDPOINT = getenv('DB_API_ENDPOINT', 'https://db.satnogs.org/api/')
