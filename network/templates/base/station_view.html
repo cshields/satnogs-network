@@ -140,6 +140,38 @@
       <div id="map-station" data-mapboxid="{{ mapbox_id }}" data-mapboxtoken="{{ mapbox_token }}"></div>
     </div>
   </div>
+  
+  <h3>Upcoming satellite passes for {{ station.name }}</h3>
+  <div class="row">
+    <div class="col-md-12">
+      <table class="table table-hover">
+        <thead>
+          <th>Name</th>
+          <th>Rise Time</th>
+          <th>Max Altitude</th>
+          <th>Rising Azimuth</th>
+        </thead>
+        <tbody>
+          {% for nextpass in nextpasses %}
+            <tr>
+              <td>
+                {{ nextpass.name }}
+              </td>
+              <td>
+                {{ nextpass.tr }} UTC
+              </td>
+              <td>
+                {{ nextpass.altt }}°
+              </td>
+              <td>
+                {{ nextpass.azr }}°
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
   {% if request.user == station.owner %}
     <!-- Station Modal -->
