@@ -1,5 +1,7 @@
 import urllib2
 import ephem
+from angles import phmsdms
+from operator import itemgetter
 from datetime import datetime, timedelta
 from StringIO import StringIO
 
@@ -306,10 +308,57 @@ def station_view(request, id):
     form = StationForm(instance=station)
     antennas = Antenna.objects.all()
 
+    try:
+        satellites = Satellite.objects.filter(transmitters__alive=True).distinct()
+    except:
+        pass  # we won't have any next passes to display
+
+    # Load the station information and invoke ephem so we can
+    # calculate upcoming passes for the station
+    observer = ephem.Observer()
+    observer.lon = str(station.lng)
+    observer.lat = str(station.lat)
+    observer.elevation = station.alt
+    observer.date = datetime.today()
+
+    nextpasses = []
+    for satellite in satellites:
+        try:
+            sat_ephem = ephem.readtle(str(satellite.tle0),
+                                      str(satellite.tle1),
+                                      str(satellite.tle2))
+            try:
+                tr, azr, tt, altt, ts, azs = observer.next_pass(sat_ephem)
+
+                # using the angles module convert the sexagesimal degree into
+                # something more easily read by a human
+                elevation = format(phmsdms(str(altt))['vals'][0], '.0f')
+
+                sat_pass = {'name': str(satellite.name),
+                            'id': satellite.id,
+                            'tr': tr,           # Rise time
+                            'azr': azr,         # Rise Azimuth
+                            'tt': tt,           # Max altitude time
+                            'altt': elevation,  # Max altitude
+                            'ts': ts,           # Set time
+                            'azs': azs}         # Set azimuth
+
+                # show only if >= 10 degrees and in next 6 hours
+                if (float(elevation) >= 10 and
+                        tr < ephem.date(datetime.today() + timedelta(hours=6))):
+                    nextpasses.append(sat_pass)
+            except ValueError:
+                pass  # there will be sats in our list that fall below horizon, skip
+            except TypeError:
+                pass  # if there happens to be a non-EarthSatellite object in the list
+        except ValueError:
+            pass  # TODO: if something does not have a proper TLE line we need to know/fix
+
     return render(request, 'base/station_view.html',
                   {'station': station, 'form': form, 'antennas': antennas,
                    'mapbox_id': settings.MAPBOX_MAP_ID,
-                   'mapbox_token': settings.MAPBOX_TOKEN})
+                   'mapbox_token': settings.MAPBOX_TOKEN,
+                   'nextpasses': sorted(nextpasses, key=itemgetter('tr'))})
 
 
 @require_POST
