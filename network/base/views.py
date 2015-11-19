@@ -330,36 +330,36 @@ def station_view(request, id):
             sat_ephem = ephem.readtle(str(satellite.tle0),
                                       str(satellite.tle1),
                                       str(satellite.tle2))
-            
+
             # Here we are going to iterate over each satellite to
             # find its appropriate passes within a given time constraint
             keep_digging = True
             while keep_digging:
                 try:
                     tr, azr, tt, altt, ts, azs = observer.next_pass(sat_ephem)
-    
+
                     if tr is None:
                         break
-                    
+
                     # using the angles module convert the sexagesimal degree into
                     # something more easily read by a human
-                    elevation = format(math.degrees(altt), '.0f')                    
+                    elevation = format(math.degrees(altt), '.0f')
                     passid += 1
-    
+
                     # show only if >= 10 degrees and in next 6 hours
                     if tr < ephem.date(datetime.today() + timedelta(hours=6)):
                         if float(elevation) >= 10:
                             sat_pass = {'passid': passid,
-                                'mytime': str(observer.date),
-                                'debug': observer.next_pass(sat_ephem),
-                                'name': str(satellite.name),
-                                'id': str(satellite.id),
-                                'tr': tr,           # Rise time
-                                'azr': azr,         # Rise Azimuth
-                                'tt': tt,           # Max altitude time
-                                'altt': elevation,  # Max altitude
-                                'ts': ts,           # Set time
-                                'azs': azs}         # Set azimuth
+                                        'mytime': str(observer.date),
+                                        'debug': observer.next_pass(sat_ephem),
+                                        'name': str(satellite.name),
+                                        'id': str(satellite.id),
+                                        'tr': tr,           # Rise time
+                                        'azr': azr,         # Rise Azimuth
+                                        'tt': tt,           # Max altitude time
+                                        'altt': elevation,  # Max altitude
+                                        'ts': ts,           # Set time
+                                        'azs': azs}         # Set azimuth
                             nextpasses.append(sat_pass)
                         observer.date = ephem.Date(ts).datetime() + timedelta(minutes=1)
                         continue
