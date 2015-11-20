@@ -344,6 +344,7 @@ def station_view(request, id):
                     # using the angles module convert the sexagesimal degree into
                     # something more easily read by a human
                     elevation = format(math.degrees(altt), '.0f')
+                    azimuth = format(math.degrees(azr), '.0f')
                     passid += 1
 
                     # show only if >= 10 degrees and in next 6 hours
@@ -355,7 +356,7 @@ def station_view(request, id):
                                         'name': str(satellite.name),
                                         'id': str(satellite.id),
                                         'tr': tr,           # Rise time
-                                        'azr': azr,         # Rise Azimuth
+                                        'azr': azimuth,     # Rise Azimuth
                                         'tt': tt,           # Max altitude time
                                         'altt': elevation,  # Max altitude
                                         'ts': ts,           # Set time
