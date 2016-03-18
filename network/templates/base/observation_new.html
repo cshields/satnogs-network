@@ -23,7 +23,7 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">Satellite</label>
       <div class="col-sm-9">
-        <select id="satellite-selection" class="form-control" name="satellite">
+        <select id="satellite-selection" class="form-control" name="satellite" autocomplete="off">
           <option value="" disabled selected>Select a satellite</option>
           {% for satellite in satellites %}
             <option data-norad="{{ satellite.norad_cat_id }}" value="{{ satellite.norad_cat_id }}">
@@ -36,15 +36,23 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">Transmitter</label>
       <div class="col-sm-9">
-        <select id="transmitter-selection" class="form-control" disabled name="transmitter">
+        <select id="transmitter-selection" class="form-control" disabled name="transmitter" autocomplete="off">
           <option id="no-transmitter" value="" disabled selected>No transmitter available</option>
           {% for transmitter in transmitters %}
             <option data-satellite="{{ transmitter.satellite.norad_cat_id }}"
-                    value="{{ transmitter.id }}">
+                    value="{{ transmitter.id }}" >
               {{ transmitter.description }} - {{ transmitter.downlink_low|frq }} - {{ transmitter.mode|default:"" }}
             </option>
           {% endfor %}
         </select>
+        {% for satellite in satellites %}
+          <small class="tle" data-norad="{{ satellite.norad_cat_id }}">
+            {% if satellite.tle_no %}
+              Using TLE {{ satellite.tle_no }} issued
+              {{ satellite.tle_epoch|timesince }} ago
+            {% endif %}
+          </small>
+        {% endfor %}
       </div>
     </div>
   </div>
@@ -79,9 +87,8 @@
             <span class="glyphicon glyphicon-calendar"></span>
           </span>
         </div>
-        <small class="pull-right">
-          <strong>IMPORTANT:</strong>
-          Timeframe is considered to be in UTC timezone.
+        <small class="timezone pull-right">
+          Timeframe is in <a href="http://www.timeanddate.com/worldclock/timezone/utc" target="_blank">UTC</a>
         </small>
       </div>
     </div>

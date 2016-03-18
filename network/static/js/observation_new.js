@@ -12,11 +12,14 @@ $(function () {
         $('#datetimepicker-end').data('DateTimePicker').maxDate(moment.utc(e.date).add(maxrange, 'm'));
     });
 
-    $('#satellite-selection').change( function() {
+    $('#satellite-selection').bind('keyup change', function() {
         var norad = $(this).find(':selected').data('norad');
         $('#transmitter-selection').prop('disabled', false);
         $('#transmitter-selection option').hide();
         $('#transmitter-selection option[data-satellite="'+norad+'"]').show().prop('selected', true);
+
+        $('.tle').hide();
+        $('.tle[data-norad="'+norad+'"]').show();
     });
 });
 

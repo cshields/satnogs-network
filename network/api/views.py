@@ -24,7 +24,7 @@ class JobView(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset.filter(start__gte=now())
-        gs_id = self.request.QUERY_PARAMS.get('ground_station', None)
+        gs_id = self.request.query_params.get('ground_station', None)
         if gs_id and self.request.user.is_authenticated():
             gs = get_object_or_404(Station, id=gs_id)
             if gs.owner == self.request.user:

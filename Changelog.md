@@ -1,3 +1,10 @@
+## 0.6
+
+* Add new Antenna types
+* Next satellites to pass on each Station
+* Keep TLE historical data
+* Show TLEs used on Observations
+
 ## 0.5
 
 * Hide satellites with no transmitters

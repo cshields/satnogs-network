@@ -16,7 +16,7 @@ class Command(BaseCommand):
         satellites_url = "{0}satellites".format(apiurl)
         transmitters_url = "{0}transmitters".format(apiurl)
 
-        self.stdout.write("Fetching from: {0}".format(apiurl))
+        self.stdout.write("==Fetching from: {0}==".format(apiurl))
         try:
             modes = urllib2.urlopen(modes_url).read()
             satellites = urllib2.urlopen(satellites_url).read()

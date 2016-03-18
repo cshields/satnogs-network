@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from network.base.models import (Antenna, Satellite, Station, Transmitter,
-                                 Observation, Data, Mode)
+                                 Observation, Data, Mode, Tle)
 
 
 @admin.register(Mode)
@@ -28,7 +28,16 @@ class StationAdmin(admin.ModelAdmin):
 @admin.register(Satellite)
 class SatelliteAdmin(admin.ModelAdmin):
     list_display = ('name', 'norad_cat_id', 'updated_date')
-    readonly_fields = ('name', 'names', 'image', 'tle0', 'tle1', 'tle2')
+    readonly_fields = ('name', 'names', 'image')
+
+    def updated_date(self, obj):
+        return obj.updated.strftime('%d.%m.%Y, %H:%M')
+
+
+@admin.register(Tle)
+class TleAdmin(admin.ModelAdmin):
+    list_display = ('tle0', 'tle1', 'updated_date')
+    readonly_fields = ('tle0', 'tle1', 'tle2')
 
     def updated_date(self, obj):
         return obj.updated.strftime('%d.%m.%Y, %H:%M')

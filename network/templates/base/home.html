@@ -168,7 +168,11 @@
                   <td>{{ observation.transmitter.downlink_low|frq }}</td>
                   <td>{{ observation.transmitter.mode }}</td>
                   <td>{{ observation.start|date:"Y-m-d H:i:s" }}</br>{{ observation.end|date:"Y-m-d H:i:s" }}</td>
-                  <td>{{ observation.author.displayname }}</td>
+                  <td>
+                    <a href="{% url 'users:view_user' username=observation.author.username %}">
+                      {{ observation.author.displayname }}
+                    </a>
+                  </td>
                 </tr>
               {% endfor %}
             </tbody>

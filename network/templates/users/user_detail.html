@@ -68,7 +68,7 @@
                 <td>{{ station.alt}} m</td>
                 <td>
                   {% for antenna in station.antenna.all %}
-                    {{ antenna.antenna_type}} on {{ antenna.frequency }} ({{ antenna.band}})<br>
+                    {{ antenna.antenna_type}} on {{ antenna.frequency|frq }} ({{ antenna.band}})<br>
                   {% endfor %}
                 </td>
               </tr>

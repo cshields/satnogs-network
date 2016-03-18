@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from shortuuidfield import ShortUUIDField
 
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -16,6 +16,7 @@ ANTENNA_TYPES = (
     ('yagi', 'Yagi'),
     ('helical', 'Helical'),
     ('parabolic', 'Parabolic'),
+    ('vertical', 'Verical'),
 )
 
 
@@ -99,10 +100,6 @@ class Satellite(models.Model):
     name = models.CharField(max_length=45)
     names = models.TextField(blank=True)
     image = models.ImageField(upload_to='satellites', blank=True)
-    tle0 = models.CharField(max_length=100, blank=True)
-    tle1 = models.CharField(max_length=200, blank=True)
-    tle2 = models.CharField(max_length=200, blank=True)
-    updated = models.DateTimeField(auto_now=True, blank=True)
 
     class Meta:
         ordering = ['norad_cat_id']
@@ -113,8 +110,49 @@ class Satellite(models.Model):
         else:
             return settings.SATELLITE_DEFAULT_IMAGE
 
+    @property
+    def latest_tle(self):
+        try:
+            latest_tle = Tle.objects.filter(satellite=self).latest('updated')
+            return latest_tle
+        except Tle.DoesNotExist:
+            return False
+
+    @property
+    def tle_no(self):
+        try:
+            line = self.latest_tle.tle1
+            return line[65:68]
+        except:
+            return False
+
+    @property
+    def tle_epoch(self):
+        try:
+            line = self.latest_tle.tle1
+            yd, s = line[18:32].split('.')
+            epoch = (datetime.strptime(yd, "%y%j") +
+                     timedelta(seconds=float("." + s) * 24 * 60 * 60))
+            return epoch
+        except:
+            return False
+
     def __unicode__(self):
         return self.name
+
+
+class Tle(models.Model):
+    tle0 = models.CharField(max_length=100, blank=True)
+    tle1 = models.CharField(max_length=200, blank=True)
+    tle2 = models.CharField(max_length=200, blank=True)
+    updated = models.DateTimeField(auto_now=True, blank=True)
+    satellite = models.ForeignKey(Satellite, related_name='tles', null=True)
+
+    class Meta:
+        ordering = ['tle0']
+
+    def __unicode__(self):
+        return self.tle0
 
 
 class Transmitter(models.Model):
@@ -140,6 +178,7 @@ class Observation(models.Model):
     """Model for SatNOGS observations."""
     satellite = models.ForeignKey(Satellite)
     transmitter = models.ForeignKey(Transmitter, null=True, related_name='observations')
+    tle = models.ForeignKey(Tle, null=True)
     author = models.ForeignKey(User)
     start = models.DateTimeField()
     end = models.DateTimeField()

@@ -1,5 +1,7 @@
 import urllib2
 import ephem
+import math
+from operator import itemgetter
 from datetime import datetime, timedelta
 from StringIO import StringIO
 
@@ -17,7 +19,7 @@ from django.core.management import call_command
 from rest_framework import serializers, viewsets
 
 from network.base.models import (Station, Transmitter, Observation,
-                                 Data, Satellite, Antenna)
+                                 Data, Satellite, Antenna, Tle)
 from network.base.forms import StationForm
 from network.base.decorators import admin_required
 
@@ -98,16 +100,18 @@ def settings_site(request):
     if request.method == 'POST':
         if request.POST['fetch']:
             try:
-                out = StringIO()
-                call_command('fetch_data', stdout=out)
-                request.session['fetch_out'] = out.getvalue()
+                data_out = StringIO()
+                tle_out = StringIO()
+                call_command('fetch_data', stdout=data_out)
+                call_command('update_all_tle', stdout=tle_out)
+                request.session['settings_out'] = data_out.getvalue() + tle_out.getvalue()
             except:
                 messages.error(request, 'fetch command failed.')
         return redirect(reverse('base:settings_site'))
 
-    fetch_out = request.session.get('fetch_out', False)
+    fetch_out = request.session.get('settings_out', False)
     if fetch_out:
-        del request.session['fetch_out']
+        del request.session['settings_out']
         return render(request, 'base/settings_site.html', {'fetch_data': fetch_out})
     return render(request, 'base/settings_site.html')
 
@@ -132,7 +136,8 @@ def observation_new(request):
         end = make_aware(end_time, utc)
         sat = Satellite.objects.get(norad_cat_id=sat_id)
         trans = Transmitter.objects.get(id=trans_id)
-        obs = Observation(satellite=sat, transmitter=trans,
+        tle = Tle.objects.get(id=sat.latest_tle.id)
+        obs = Observation(satellite=sat, transmitter=trans, tle=tle,
                           author=me, start=start, end=end)
         obs.save()
 
@@ -171,7 +176,16 @@ def prediction_windows(request, sat_id, start_date, end_date):
             'error': 'You should select a Satellite first.'
         }
         return JsonResponse(data, safe=False)
-    satellite = ephem.readtle(str(sat.tle0), str(sat.tle1), str(sat.tle2))
+
+    try:
+        satellite = ephem.readtle(str(sat.latest_tle.tle0),
+                                  str(sat.latest_tle.tle1),
+                              str(sat.latest_tle.tle2))
+    except:
+        data = {
+            'error': 'No TLEs for this satellite yet.'
+        }
+        return JsonResponse(data, safe=False)
 
     end_date = datetime.strptime(end_date, '%Y-%m-%d %H:%M')
 
@@ -306,10 +320,79 @@ def station_view(request, id):
     form = StationForm(instance=station)
     antennas = Antenna.objects.all()
 
+    try:
+        satellites = Satellite.objects.filter(transmitters__alive=True).distinct()
+    except:
+        pass  # we won't have any next passes to display
+
+    # Load the station information and invoke ephem so we can
+    # calculate upcoming passes for the station
+    observer = ephem.Observer()
+    observer.lon = str(station.lng)
+    observer.lat = str(station.lat)
+    observer.elevation = station.alt
+
+    nextpasses = []
+    passid = 0
+
+    for satellite in satellites:
+        observer.date = ephem.date(datetime.today())
+
+        try:
+            sat_ephem = ephem.readtle(str(satellite.latest_tle.tle0),
+                                      str(satellite.latest_tle.tle1),
+                                      str(satellite.latest_tle.tle2))
+
+            # Here we are going to iterate over each satellite to
+            # find its appropriate passes within a given time constraint
+            keep_digging = True
+            while keep_digging:
+                try:
+                    tr, azr, tt, altt, ts, azs = observer.next_pass(sat_ephem)
+
+                    if tr is None:
+                        break
+
+                    # using the angles module convert the sexagesimal degree into
+                    # something more easily read by a human
+                    elevation = format(math.degrees(altt), '.0f')
+                    azimuth = format(math.degrees(azr), '.0f')
+                    passid += 1
+
+                    # show only if >= 10 degrees and in next 6 hours
+                    if tr < ephem.date(datetime.today() + timedelta(hours=6)):
+                        if float(elevation) >= 10:
+                            sat_pass = {'passid': passid,
+                                        'mytime': str(observer.date),
+                                        'debug': observer.next_pass(sat_ephem),
+                                        'name': str(satellite.name),
+                                        'id': str(satellite.id),
+                                        'tr': tr,           # Rise time
+                                        'azr': azimuth,     # Rise Azimuth
+                                        'tt': tt,           # Max altitude time
+                                        'altt': elevation,  # Max altitude
+                                        'ts': ts,           # Set time
+                                        'azs': azs}         # Set azimuth
+                            nextpasses.append(sat_pass)
+                        observer.date = ephem.Date(ts).datetime() + timedelta(minutes=1)
+                        continue
+                    else:
+                        keep_digging = False
+                    continue
+                except ValueError:
+                    break  # there will be sats in our list that fall below horizon, skip
+                except TypeError:
+                    break  # if there happens to be a non-EarthSatellite object in the list
+                except Exception:
+                    break
+        except (ValueError, AttributeError):
+            pass  # TODO: if something does not have a proper TLE line we need to know/fix
+
     return render(request, 'base/station_view.html',
                   {'station': station, 'form': form, 'antennas': antennas,
                    'mapbox_id': settings.MAPBOX_MAP_ID,
-                   'mapbox_token': settings.MAPBOX_TOKEN})
+                   'mapbox_token': settings.MAPBOX_TOKEN,
+                   'nextpasses': sorted(nextpasses, key=itemgetter('tr'))})
 
 
 @require_POST

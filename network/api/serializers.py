@@ -25,10 +25,10 @@ class JobSerializer(serializers.ModelSerializer):
         return obj.observation.transmitter.downlink_low
 
     def get_tle0(self, obj):
-        return obj.observation.satellite.tle0
+        return obj.observation.tle.tle0
 
     def get_tle1(self, obj):
-        return obj.observation.satellite.tle1
+        return obj.observation.tle.tle1
 
     def get_tle2(self, obj):
-        return obj.observation.satellite.tle2
+        return obj.observation.tle.tle2
