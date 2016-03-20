@@ -157,6 +157,7 @@
         <th>Rise Time</th>
         <th>Max Altitude</th>
         <th>Rising Azimuth</th>
+        <th>Schedule</th>
       </thead>
       <tbody>
         {% for nextpass in nextpasses %}
@@ -172,6 +173,10 @@
             </td>
             <td>
               {{ nextpass.azr }}°
+            </td>
+            <td>
+              <a href="{% url 'base:observation_new' selected_id=nextpass.norad_cat_id obs_start=nextpass.obs_start obs_end=nextpass.obs_end%}">
+                Schedule Observation</a>
             </td>
           </tr>
         {% endfor %}

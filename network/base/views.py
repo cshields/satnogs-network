@@ -124,7 +124,7 @@ def observations_list(request):
 
 
 @login_required
-def observation_new(request):
+def observation_new(request, selected_id=None, obs_start=0.0, obs_end=0.0):
     """View for new observation"""
     me = request.user
     if request.method == 'POST':
@@ -157,6 +157,9 @@ def observation_new(request):
 
         return redirect(reverse('base:observation_view', kwargs={'id': obs.id}))
 
+    if not selected_id == None:
+        selected_id = int(selected_id)
+
     satellites = Satellite.objects.filter(transmitters__alive=True).distinct()
     transmitters = Transmitter.objects.filter(alive=True)
 
@@ -164,7 +167,10 @@ def observation_new(request):
                   {'satellites': satellites,
                    'transmitters': transmitters,
                    'date_min_start': settings.DATE_MIN_START,
-                   'date_max_range': settings.DATE_MAX_RANGE})
+                   'date_max_range': settings.DATE_MAX_RANGE,
+                   'selected_id': selected_id,
+                   'obs_start': ephem.Date(float(obs_start)),
+                   'obs_end': ephem.Date(float(obs_end))})
 
 
 def prediction_windows(request, sat_id, start_date, end_date):
@@ -368,13 +374,16 @@ def station_view(request, id):
                                         'mytime': str(observer.date),
                                         'debug': observer.next_pass(sat_ephem),
                                         'name': str(satellite.name),
+                                        'norad_cat_id': satellite.norad_cat_id,
                                         'id': str(satellite.id),
                                         'tr': tr,           # Rise time
                                         'azr': azimuth,     # Rise Azimuth
                                         'tt': tt,           # Max altitude time
                                         'altt': elevation,  # Max altitude
                                         'ts': ts,           # Set time
-                                        'azs': azs}         # Set azimuth
+                                        'azs': azs,         # Set azimuth
+                                        'obs_start': str(tr - (2 * ephem.minute)),
+                                        'obs_end': str(ts + (2 * ephem.minute))}
                             nextpasses.append(sat_pass)
                         observer.date = ephem.Date(ts).datetime() + timedelta(minutes=1)
                         continue
