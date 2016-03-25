@@ -20,6 +20,12 @@ ANTENNA_TYPES = (
     ('parabolic', 'Parabolic'),
     ('vertical', 'Verical'),
 )
+OBSERVATION_STATUSES = (
+    ('unknown', 'Unknown'),
+    ('verified', 'Verified'),
+    ('data_not_verified', 'Has Data, Not Verified'),
+    ('no_data', 'No Data'),
+)
 
 
 class Rig(models.Model):
@@ -216,9 +222,25 @@ class Observation(models.Model):
         deletion = self.start - timedelta(minutes=int(settings.OBSERVATION_MAX_DELETION_RANGE))
         return deletion > now()
 
+    # observation has at least 1 payload submitted, no verification taken into account
     @property
-    def has_data(self):
+    def has_submitted_data(self):
         return self.data_set.exclude(payload='').count()
+
+    # observaton has at least 1 payload that has been verified good
+    @property
+    def has_verified_data(self):
+        return self.data_set.filter(vetted_status='verified').count()
+
+    # observation is vetted to be all bad data
+    @property
+    def has_no_data(self):
+        return self.data_set.filter(vetted_status='verified').count() == self.data_set.count()
+
+    # observation has at least 1 payload left unvetted
+    @property
+    def has_unvetted_data(self):
+        return self.data_set.filter(vetted_status='unknown').count()
 
     def __unicode__(self):
         return "%d" % self.id
@@ -231,10 +253,29 @@ class Data(models.Model):
     observation = models.ForeignKey(Observation)
     ground_station = models.ForeignKey(Station)
     payload = models.FileField(upload_to='data_payloads', blank=True, null=True)
+    vetted_datetime = models.DateTimeField(null=True, blank=True)
+    vetted_user = models.ForeignKey(User, related_name="vetted_user_set", null=True, blank=True)
+    vetted_status = models.CharField(choices=OBSERVATION_STATUSES,
+                                     max_length=10, default='unknown')
 
     @property
     def is_past(self):
         return self.end < now()
+
+    # this payload has been vetted good/bad by someone
+    @property
+    def is_vetted(self):
+        return not self.vetted_status == 'unknown'
+
+    # this payload has been vetted as good by someone
+    @property
+    def is_verified(self):
+        return self.vetted_status == 'verified'
+
+    # this payload has been vetted as bad by someone
+    @property
+    def is_no_data(self):
+        return self.vetted_status == 'no_data'
 
     class Meta:
         ordering = ['-start', '-end']

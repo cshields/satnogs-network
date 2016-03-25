@@ -274,6 +274,14 @@ def observation_view(request, id):
     observation = get_object_or_404(Observation, id=id)
     data = Data.objects.filter(observation=observation)
 
+    # not all users will be able to vet data within an observation, allow
+    # staff, observation requestors, and station owners
+    is_vetting_user = False
+    if request.user == observation.author or \
+        data.filter(ground_station__in=Station.objects.filter(owner=request.user)).count or \
+            request.user.is_staff:
+                is_vetting_user = True
+
     if settings.ENVIRONMENT == 'production':
         discuss_slug = 'https://community.satnogs.org/t/observation-{0}-{1}-{2}' \
             .format(observation.id, slugify(observation.satellite.name),
@@ -292,10 +300,11 @@ def observation_view(request, id):
 
         return render(request, 'base/observation_view.html',
                       {'observation': observation, 'data': data, 'has_comments': has_comments,
-                       'discuss_url': discuss_url, 'discuss_slug': discuss_slug})
+                       'discuss_url': discuss_url, 'discuss_slug': discuss_slug,
+                       'is_vetting_user': is_vetting_user})
 
     return render(request, 'base/observation_view.html',
-                  {'observation': observation, 'data': data})
+                  {'observation': observation, 'data': data, 'is_vetting_user': is_vetting_user})
 
 
 @login_required
@@ -309,6 +318,28 @@ def observation_delete(request, id):
     else:
         messages.error(request, 'Permission denied.')
     return redirect(reverse('base:observations_list'))
+
+
+@login_required
+def data_verify(request, id):
+    me = request.user
+    data = get_object_or_404(Data, id=id)
+    data.vetted_status = 'verified'
+    data.vetted_user = me
+    data.vetted_datetime = datetime.today()
+    data.save(update_fields=['vetted_status', 'vetted_user', 'vetted_datetime'])
+    return redirect(reverse('base:observation_view', kwargs={'id': data.observation}))
+
+
+@login_required
+def data_mark_bad(request, id):
+    me = request.user
+    data = get_object_or_404(Data, id=id)
+    data.vetted_status = 'no_data'
+    data.vetted_user = me
+    data.vetted_datetime = datetime.today()
+    data.save(update_fields=['vetted_status', 'vetted_user', 'vetted_datetime'])
+    return redirect(reverse('base:observation_view', kwargs={'id': data.observation}))
 
 
 def stations_list(request):

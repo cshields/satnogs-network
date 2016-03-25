@@ -310,3 +310,11 @@ code.log p {
 .panel-title.link {
     color: #337ab7;
 }
+
+.verified {
+    color: #009933;
+}
+
+.no_data {
+    color: #cc3300;
+}
