@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load tags %}
+
+{% load staticfiles %}
+
+{% block title %} - Satellite {{ satellite.name }}{% endblock %}
+
+{% block content %}
+
+  <div class="row">
+    <div class="col-md-12">
+      <h2 id="satellite-info">
+        Satellite {{ satellite.name }}, {{ satellite.norad_cat_id }}
+        {% if satellite.names %}
+        aka {{ satellite.names }}
+        {% endif %}
+      </h2>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <a href="https://db.satnogs.org/satellite/{{ satellite.norad_cat_id }}" target="_blank">
+        View this satellite in SatNOGS DB
+      </a>
+      <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
+    </div>
+  </div>
+  <div class="row tle-data">
+    <div class="col-md-12">
+      {% if tle.tle1 %}
+        <h3>Current TLE <small> updated {{ satellite.tle_epoch|timesince }} ago from Celestrak</small></h3>
+          <pre>{{ tle.tle1 }}<br>{{ tle.tle2 }}</pre>
+      {% else %}
+        <h4 class="tle-missing">Network is missing TLE data for this satellite.</h4>
+      {% endif %}
+    </div>
+  </div>
+  
+  {% if observations.count > 0 %}
+  <div class="row recent-observations-header">
+    <div class="col-md-12">
+      <h3>Recent Observations</h3>
+    </div>
+  </div>
+
+  <div>
+  <table class="table table-hover table-responsive">
+      <thead>
+        <th>ID</th>
+        <th>Frequency</th>
+        <th>Encoding</th>
+        <th>Timeframe</th>
+        <th>Observer</th>
+      </thead>
+      <tbody>
+        {% for observation in observations %}
+          <tr>
+            <td>
+              <a href="{% url 'base:observation_view' id=observation.id %}">
+                <span class="label
+                               {% if observation.has_verified_data %}
+                                label-success" title="There is known good data in this observation"
+                               {% elif observation.is_future %}
+                                label-info" title="This observation is in the future"
+                               {% elif observation.has_unvetted_data %}
+                                label-warning" title="There is data that needs vetting in this observation"
+                               {% else %}
+                                label-danger" title="No good data in this observation"
+                               {% endif %}>
+                  {{ observation.id }}
+                </span>
+              </a>
+            </td>
+            <td>{{ observation.transmitter.downlink_low|frq }}</td>
+            <td>{{ observation.transmitter.mode|default:"-" }}</td>
+            <td>{{ observation.start|date:"Y-m-d H:i:s" }}</br>{{ observation.end|date:"Y-m-d H:i:s" }}</td>
+            <td>
+              <a href="{% url 'users:view_user' username=observation.author.username %}">
+                {{ observation.author.displayname }}
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="row recent-observations-header">
+    <div class="col-md-12">
+      <h3>There are no recorded observations for this satellite.</h3>
+    </div>
+  </div>
+  {% endif %}
+{% endblock content %}

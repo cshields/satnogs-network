@@ -479,3 +479,14 @@ def station_delete(request, id):
     station.delete()
     messages.success(request, 'Ground Station deleted successfully.')
     return redirect(reverse('users:view_user', kwargs={'username': me}))
+
+
+def satellite_view(request, id):
+    """View for single satellite page."""
+    satellite = get_object_or_404(Satellite, id=id)
+    tle = satellite.latest_tle
+    observations = Observation.objects.filter(satellite=satellite)[:30]
+
+    return render(request, 'base/satellite_view.html',
+                  {'satellite': satellite, 'tle': tle,
+                   'observations': observations})

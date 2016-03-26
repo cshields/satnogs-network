@@ -325,3 +325,7 @@ code.log p {
     color: #cc3300;
     padding-right: 5px;
 }
+
+.tle-missing {
+    color: #bf3f3f;
+}
