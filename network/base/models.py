@@ -235,7 +235,7 @@ class Observation(models.Model):
     # observation is vetted to be all bad data
     @property
     def has_no_data(self):
-        return self.data_set.filter(vetted_status='verified').count() == self.data_set.count()
+        return self.data_set.filter(vetted_status='no_data').count() == self.data_set.count()
 
     # observation has at least 1 payload left unvetted
     @property

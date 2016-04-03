@@ -10,6 +10,12 @@
       <a class="btn btn-primary pull-right" href="{% url 'base:observation_new' %}">New Observation</a>
     {% endif %}
   </h1>
+  <div>
+    <button class="btn btn-default" type="button" data-toggle="collapse"
+       data-target=".bad" aria-expanded="false" aria-controls=".bad">
+      Bad Observations on/off <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
+    </button>
+  </div>
 
   <div class="row">
     <div class="col-md-12">
@@ -24,7 +30,9 @@
         </thead>
         <tbody>
           {% for observation in observations.all %}
-            <tr>
+            <tr{% if observation.has_no_data %}
+                  class="bad"
+                {% endif %}>
               <td>
                 <a href="{% url 'base:observation_view' id=observation.id %}">
                   <span class="label
