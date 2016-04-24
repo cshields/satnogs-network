@@ -1,0 +1,48 @@
+<div class="modal fade" id="SatelliteModal" tabindex="-1" role="dialog" aria-labelledby="SatelliteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="SatelliteModalTitle">{{ satellite.name }}</h4>
+      </div>
+        <div class="modal-body">
+          <div class="row panel-body">
+            <div class="col-md-4 panel-satellite">
+              <div>
+                <img src="{{ satellite.get_image }}" alt="{{ satellite.name }}" class="satellite-img-full">
+              </div>
+            </div>
+            <div class="col-md-8">
+              <div class="satellite-info">
+                <div class="satellite-title">
+                  {{ satellite.name }}
+                </div>
+                <div class="satellite-names">
+                  {{ satellite.names }}
+                </div>
+              </div>
+              <ul class="list-unstyled">
+                <li>
+                  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                  <a href="{% url 'base:observation_new' %}?norad={{ satellite.norad_cat_id }}">Schedule new Observation</a>
+                </li>
+                <li>
+                  <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
+                  <a href="{% url 'base:observations_list' %}?norad={{ satellite.norad_cat_id }}">Past Observations</a>
+                </li>
+                <li>&nbsp;</li>
+                <li>
+                  <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
+                  <a href="https://db.satnogs.org/satellite/{{ satellite.norad_cat_id }}" target="_blank">DB Data</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

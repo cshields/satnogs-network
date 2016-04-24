@@ -11,121 +11,126 @@
 
 {% block content %}
 
-<div class="row">
-  <div class="col-md-12">
-    <h2>New Observation</h2>
+  <div class="row">
+    <div class="col-md-12">
+      <h2>New Observation</h2>
+      <div class="timezone text-muted">
+        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+        Timeframes are in <a href="#" data-toggle="modal" data-target="#UTCModal">UTC</a>
+      </div>
+    </div>
   </div>
-</div>
 
-<form class="form-horizontal" role="form" action="{% url 'base:observation_new' %}" method="post">{% csrf_token %}
-<div class="row">
-  <div class="col-md-6">
-    <div class="form-group">
-      <label class="col-sm-3 control-label">Satellite</label>
-      <div class="col-sm-9">
-        <select id="satellite-selection" class="form-control" name="satellite" autocomplete="off">
-          <option value="" disabled selected>Select a satellite</option>
+  <form class="form-horizontal" role="form" action="{% url 'base:observation_new' %}" method="post">{% csrf_token %}
+  <div class="row">
+    <div class="col-md-6">
+      <div class="form-group">
+        <label class="col-sm-3 control-label">Satellite</label>
+        <div class="col-sm-9">
+          <select id="satellite-selection" class="form-control" name="satellite" autocomplete="off">
+            <option value="" disabled selected>Select a satellite</option>
+            {% for satellite in satellites %}
+              <option data-norad="{{ satellite.norad_cat_id }}" value="{{ satellite.norad_cat_id }}"
+                      {% ifequal satellite.norad_cat_id norad %}selected{% endifequal %}>
+                {{ satellite.norad_cat_id }} - {{ satellite.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-3 control-label">Transmitter</label>
+        <div class="col-sm-9">
+          <select id="transmitter-selection" class="form-control" disabled name="transmitter" autocomplete="off">
+            <option id="no-transmitter" value="" disabled selected>No transmitter available</option>
+            {% for transmitter in transmitters %}
+              <option data-satellite="{{ transmitter.satellite.norad_cat_id }}"
+                      value="{{ transmitter.id }}" >
+                {{ transmitter.description }} - {{ transmitter.downlink_low|frq }} - {{ transmitter.mode|default:"" }}
+              </option>
+            {% endfor %}
+          </select>
           {% for satellite in satellites %}
-            <option data-norad="{{ satellite.norad_cat_id }}" value="{{ satellite.norad_cat_id }}">
-              {{ satellite.norad_cat_id }} - {{ satellite.name }}
-            </option>
+            <small class="tle" data-norad="{{ satellite.norad_cat_id }}">
+              {% if satellite.tle_no %}
+                Using TLE {{ satellite.tle_no }} issued
+                {{ satellite.tle_epoch|timesince }} ago
+              {% endif %}
+            </small>
           {% endfor %}
-        </select>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="col-sm-3 control-label">Transmitter</label>
-      <div class="col-sm-9">
-        <select id="transmitter-selection" class="form-control" disabled name="transmitter" autocomplete="off">
-          <option id="no-transmitter" value="" disabled selected>No transmitter available</option>
-          {% for transmitter in transmitters %}
-            <option data-satellite="{{ transmitter.satellite.norad_cat_id }}"
-                    value="{{ transmitter.id }}" >
-              {{ transmitter.description }} - {{ transmitter.downlink_low|frq }} - {{ transmitter.mode|default:"" }}
-            </option>
-          {% endfor %}
-        </select>
-        {% for satellite in satellites %}
-          <small class="tle" data-norad="{{ satellite.norad_cat_id }}">
-            {% if satellite.tle_no %}
-              Using TLE {{ satellite.tle_no }} issued
-              {{ satellite.tle_epoch|timesince }} ago
-            {% endif %}
-          </small>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-  <div class="col-md-6">
-    <div class="form-group">
-      <label class="col-sm-3 control-label">Start Time</label>
-      <div class="col-sm-9">
-        <div class='input-group date' id="datetimepicker-start"
-             data-date-minstart="{{ date_min_start }}">
-          <input type="text"
-                 class="form-control"
-                 name="start-time"
-                 data-date-format="YYYY-MM-DD HH:mm"
-                 autocomplete="off">
-          <span class="input-group-addon">
-            <span class="glyphicon glyphicon-calendar"></span>
-          </span>
         </div>
       </div>
     </div>
-    <div class="form-group">
-      <label class="col-sm-3 control-label">End Time</label>
-      <div class="col-sm-9">
-        <div class='input-group date' id="datetimepicker-end"
-             data-date-maxrange="{{ date_max_range }}">
-          <input type="text"
-                 class="form-control"
-                 name="end-time"
-                 data-date-format="YYYY-MM-DD HH:mm"
-                 autocomplete="off">
-          <span class="input-group-addon">
-            <span class="glyphicon glyphicon-calendar"></span>
-          </span>
+    <div class="col-md-6">
+      <div class="form-group">
+        <label class="col-sm-3 control-label">Start Time</label>
+        <div class="col-sm-9">
+          <div class='input-group date' id="datetimepicker-start"
+               data-date-minstart="{{ date_min_start }}">
+            <input type="text"
+                   class="form-control"
+                   name="start-time"
+                   data-date-format="YYYY-MM-DD HH:mm"
+                   autocomplete="off">
+            <span class="input-group-addon">
+              <span class="glyphicon glyphicon-calendar"></span>
+            </span>
+          </div>
         </div>
-        <small class="timezone pull-right">
-          Timeframe is in <a href="http://www.timeanddate.com/worldclock/timezone/utc" target="_blank">UTC</a>
-        </small>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-3 control-label">End Time</label>
+        <div class="col-sm-9">
+          <div class='input-group date' id="datetimepicker-end"
+               data-date-maxrange="{{ date_max_range }}">
+            <input type="text"
+                   class="form-control"
+                   name="end-time"
+                   data-date-format="YYYY-MM-DD HH:mm"
+                   autocomplete="off">
+            <span class="input-group-addon">
+              <span class="glyphicon glyphicon-calendar"></span>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="row">
-  <div class="col-md-12">
-    <button type="button" id="calculate-observation" class="btn btn-primary pull-right">
-      Calculate Observation
-    </button>
-  </div>
-</div>
-
-<div class="row calculation-result">
-  <div class="col-md-12">
-    <h3>Calculated Timeline</h3>
-    <div id="loading" class="notice">Calculating</div>
-    <div id="timeline">
+  <div class="row">
+    <div class="col-md-12">
+      <button type="button" id="calculate-observation" class="btn btn-primary pull-right">
+        Calculate Observation
+      </button>
     </div>
-    <div id="hoverRes">
-      <div class="coloredDiv"></div>
-      <div id="name"></div>
-      <div id="scrolled_date"></div>
-    </div>
-    <div id="windows-data"></div>
   </div>
-</div>
 
-<div class="row calculation-result">
-  <div class="col-md-12">
-    <button type="submit" id="schedule-observation" class="btn btn-success pull-right" disabled="True">
-      Schedule Observation
-    </button>
+  <div class="row calculation-result">
+    <div class="col-md-12">
+      <h3>Calculated Timeline</h3>
+      <div id="loading" class="notice">Calculating</div>
+      <div id="timeline">
+      </div>
+      <div id="hoverRes">
+        <div class="coloredDiv"></div>
+        <div id="name"></div>
+        <div id="scrolled_date"></div>
+      </div>
+      <div id="windows-data"></div>
+    </div>
   </div>
-</div>
-</form>
+
+  <div class="row calculation-result">
+    <div class="col-md-12">
+      <button type="submit" id="schedule-observation" class="btn btn-success pull-right" disabled="True">
+        Schedule Observation
+      </button>
+    </div>
+  </div>
+  </form>
+
+  <!-- UTC Modal -->
+  {% include 'includes/utc.html' %}
 
 {% endblock content %}
 
@@ -134,5 +139,6 @@
   <script src="{% static 'js/lib/d3-timeline.js' %}"></script>
   <script src="{% static 'js/lib/moment.min.js' %}"></script>
   <script src="{% static 'js/lib/bootstrap-datetimepicker.min.js' %}"></script>
+  <script src="{% static 'js/utc.js' %}"></script>
   <script src="{% static 'js/observation_new.js' %}"></script>
 {% endblock javascript %}

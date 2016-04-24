@@ -59,6 +59,12 @@
             </div>
           </div>
           <div class="form-group">
+            <label for="horizon" class="col-sm-2 control-label">Minimum Horizon</label>
+            <div class="col-sm-10">
+              <input value="{{ form.horizon.value }}" id="horizon" type="text" class="form-control" name="horizon" placeholder="Minimum horizon for passes, default 10">
+            </div>
+          </div>
+          <div class="form-group">
             <label for="antennas" class="col-sm-2 control-label">Antennas</label>
             <div class="col-sm-10">
               <select multiple class="form-control" name="antenna">
@@ -68,6 +74,25 @@
                   </option>
                 {% endfor %}
               </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="rig" class="col-sm-2 control-label">Rig</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="rig">
+                <option value="" selected>---</option>
+                {% for rig in rigs %}
+                  <option value="{{ rig.id }}" {% ifequal station.rig rig %}selected{% endifequal %}>
+                    {{ rig }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group has-warning">
+            <label for="uuid" class="col-sm-2 control-label">UUID</label>
+            <div class="col-sm-10">
+              <input value="{{ form.uuid.value|default_if_none:"" }}" id="uuid" type="text" class="form-control" name="uuid" placeholder="UUID">
             </div>
           </div>
           <div class="form-group">

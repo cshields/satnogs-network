@@ -1,3 +1,19 @@
+## 0.7
+* Display current playback time for observation data
+* Observation timeline adapt to mobile
+* Collapse station next satellite passes
+* Implement a configurable minimum horizon in network
+* Provide all settings client needs through API
+* Observation data vetting/verification system
+* Simplify UI for observation data panels
+* Use UTC on observations
+* Filter observations based on data verification
+* Filter observations by satellite
+* Include modulation on API Jobs endpoint
+* Add a new payload field on Data model
+* Add selector for prefilling satellite on new observations
+* Satellite modal on observations
+
 ## 0.6
 
 * Add new Antenna types

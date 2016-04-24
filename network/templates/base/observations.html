@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load tags %}
+{% load staticfiles %}
 
 {% block title %} - Observations{% endblock %}
 
@@ -10,6 +11,46 @@
       <a class="btn btn-primary pull-right" href="{% url 'base:observation_new' %}">New Observation</a>
     {% endif %}
   </h1>
+
+  <button class="btn btn-default btn-sm" role="button" data-toggle="collapse"
+          href="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
+    <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> Filters
+  </button>
+
+  <div class="collapse{% if norad %} in{% endif %}" id="collapseFilters">
+    <div class="filter-section">
+      <h4>Data:</h4>
+      <button class="btn btn-default btn-sm active" data-toggle="collapse"
+              data-target=".bad" aria-expanded="true" aria-controls="bad">
+        Bad
+      </button>
+      <button class="btn btn-default btn-sm active" data-toggle="collapse" data-target=".unvetted"
+              data-target=".unvetted" aria-expanded="true" aria-controls="unvetted">
+        Unvetted
+      </button>
+      <button class="btn btn-default btn-sm active" data-toggle="collapse" data-target=".good"
+              data-target=".good" aria-expanded="true" aria-controls="good">
+        Good
+      </button>
+    </div>
+
+    <div class="filter-section">
+      <form id="satellite-filter" class="form-inline" methon="get" action="{% url 'base:observations_list' %}">
+        <div class="form-group">
+          <h4>Satellite:</h4>
+          <select class="form-control" name="norad" autocomplete="off" id="satellite-selection">
+            <option value="" selected>All</option>
+            {% for satellite in satellites %}
+              <option data-norad="{{ satellite.norad_cat_id }}" value="{{ satellite.norad_cat_id }}"
+                      {% ifequal satellite.norad_cat_id norad %}selected{% endifequal %}>
+                {{ satellite.norad_cat_id }} - {{ satellite.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <div class="row">
     <div class="col-md-12">
@@ -24,15 +65,26 @@
         </thead>
         <tbody>
           {% for observation in observations.all %}
-            <tr>
+            <tr{% if observation.has_no_data %}
+                  class="satellite-row bad collapse in"
+                {% elif observation.has_verified_data %}
+                  class="satellite-row good collapse in"
+                {% elif observation.has_unvetted_data %}
+                  class="satellite-row unvetted collapse in"
+                {% endif %}
+                data-norad="{{ observation.satellite.norad_cat_id }}">
               <td>
                 <a href="{% url 'base:observation_view' id=observation.id %}">
                   <span class="label
-                               {% if observation.has_data %}
-                                label-success
+                               {% if observation.has_verified_data %}
+                                label-success" title="There is known good data in this observation"
+                               {% elif observation.is_future %}
+                                label-info" title="This observation is in the future"
+                               {% elif observation.has_unvetted_data %}
+                                label-warning" title="There is data that needs vetting in this observation"
                                {% else %}
-                                label-danger
-                               {% endif %}">
+                                label-danger" title="No good data in this observation"
+                               {% endif %}>
                     {{ observation.id }}
                   </span>
                 </a>
@@ -53,3 +105,7 @@
     </div>
   </div>
 {% endblock content %}
+
+{% block javascript %}
+  <script src="{% static 'js/observations.js' %}"></script>
+{% endblock javascript %}

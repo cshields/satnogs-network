@@ -107,7 +107,7 @@ MEDIA_ROOT = path.join(path.dirname(BASE_DIR), 'media')
 MEDIA_URL = '/media/'
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 STATION_DEFAULT_IMAGE = '/static/img/dish.png'
-SATELLITE_DEFAULT_IMAGE = '/static/img/sat.png'
+SATELLITE_DEFAULT_IMAGE = 'https://db.satnogs.org/static/img/sat.png'
 
 # App conf
 ROOT_URLCONF = 'network.urls'

@@ -13,6 +13,10 @@
           data-end="{{ observation.end|date:"U"}}">
         Observation #{{ observation.id }}
       </h2>
+      <div class="timezone text-muted">
+        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+        Timeframes are in <a href="#" data-toggle="modal" data-target="#UTCModal">UTC</a>
+      </div>
     </div>
     <div class="col-md-6 text-right">
       <h2>
@@ -35,7 +39,11 @@
         </thead>
         <tbody>
             <tr>
-              <td>{{ observation.satellite.norad_cat_id }} - {{ observation.satellite.name }}</td>
+              <td>
+                <a href="#" data-toggle="modal" data-target="#SatelliteModal">
+                  {{ observation.satellite.norad_cat_id }}  - {{ observation.satellite.name }}
+                </a>
+              </td>
               <td>{{ observation.transmitter.downlink_low|frq }}</td>
               <td>{{ observation.transmitter.mode|default:"-" }}</td>
               <td>{{ observation.start|date:"Y-m-d H:i:s" }}</br>{{ observation.end|date:"Y-m-d H:i:s" }}</td>
@@ -100,8 +108,40 @@
                data-groundstation="{{ data.ground_station }}">
             <div class="panel-heading">
               <h3 class="panel-title">
-                Data payload #{{ data.id }} from {{ data.ground_station }}
+                {% if data.is_vetted %}
+                  {% if data.is_verified %}
+                    <span class="glyphicon glyphicon-ok-sign {{ data.vetted_status }}" aria-hidden="true"
+                          data-toggle="tooltip" data-placement="right"
+                          title="Verified good on {{ data.vetted_datetime|date:"Y-m-d H:i:s" }} by {{ data.vetted_user }}"></span>
+                  {% else %}
+                    <span class="glyphicon glyphicon-remove-sign {{ data.vetted_status }}" aria-hidden="true"
+                          data-toggle="tooltip" data-placement="right"
+                          title="Verified bad on {{ data.vetted_datetime|date:"Y-m-d H:i:s" }} by {{ data.vetted_user }}"></span>
+                  {% endif %}
+                {% endif %}
+
+                Data payload #{{ data.id }} ~
+
+                Groud Station:
+                <a href="{% url 'base:station_view' id=data.ground_station.id %}">
+                  {{ data.ground_station }}
+                </a>
               </h3>
+
+              <div class="vetting">
+                {% if not data.is_vetted and is_vetting_user %}
+                  <a href="{% url 'base:data_verify' id=data.id %}">
+                    <button id="verify-data" type="button" class="btn btn-default btn-xs">
+                      <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span> Verify
+                    </button>
+                  </a>
+                  <a href="{% url 'base:data_mark_bad' id=data.id %}">
+                    <button id="bad-data" type="button" class="btn btn-default btn-xs">
+                      <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span> No Data
+                    </button>
+                  </a>
+                {% endif %}
+              </div>
             </div>
             <div class="panel-body">
               {% if data.payload %}
@@ -116,20 +156,29 @@
               {% endif %}
             </div>
             <div class="panel-footer">
-              <span class="label label-default">Timeframe</span>
-              {{ data.start|date:"Y-m-d H:i:s" }} ~ {{ data.end|date:"Y-m-d H:i:s" }}
-              <a href="{{ MEDIA_URL }}{{ data.payload }}"
-                 target="_blank"
-                 class="pull-right"
-                 download="">
-                <button type="button" class="btn btn-default btn-xs">
-                  <span class="glyphicon glyphicon-download"></span> Data
+              {% if data.payload %}
+                <button type="button" class="btn btn-primary btn-xs playpause">
+                  <span class="glyphicon glyphicon-play"></span>
+                  <span class="glyphicon glyphicon-pause"></span>
                 </button>
-              </a>
-              <button type="button" class="btn btn-primary btn-xs pull-right playpause">
-                <span class="glyphicon glyphicon-play"></span>
-                <span class="glyphicon glyphicon-pause"></span>
-              </button>
+                <span id="playback-time-{{ data.id }}" class="label label-info playback-time"></span>
+
+                <a href="{{ MEDIA_URL }}{{ data.payload }}"
+                   target="_blank"
+                   download="">
+                  <button type="button" class="btn btn-default btn-xs">
+                    <span class="glyphicon glyphicon-download"></span> Data
+                  </button>
+                </a>
+              {% else %}
+                &nbsp;
+              {% endif %}
+
+              <span class="pull-right hidden-xs">
+                <span class="label label-default">Timeframe</span>
+                {{ data.start|date:"Y-m-d H:i:s" }} - {{ data.end|date:"Y-m-d H:i:s" }}
+              </span>
+
             </div>
           </div>
         {% endfor %}
@@ -144,25 +193,21 @@
     </div>
   </div>
 
+  <!-- UTC Modal -->
+  {% include 'includes/utc.html' %}
+
+  <!-- Satellite Modal -->
+  {% with satellite=observation.satellite %}
+    {% include 'includes/satellite.html' %}
+  {% endwith %}
+
 {% endblock content %}
 
 {% block javascript %}
   <script src="{% static 'js/lib/d3.v3.min.js' %}"></script>
   <script src="{% static 'js/lib/d3-timeline.js' %}"></script>
   <script src="{% static 'js/lib/wavesurfer.min.js' %}"></script>
+  <script src="{% static 'js/lib/moment.min.js' %}"></script>
+  <script src="{% static 'js/utc.js' %}"></script>
   <script src="{% static 'js/observation_view.js' %}"></script>
-
-  <script type="text/javascript">
-      (function() {
-          var message = "Do you really want to delete this Observation?";
-          var actions = $('#obs-delete');
-          if (actions.length) {
-              actions[0].addEventListener("click", function(e) {
-                  if (! confirm(message)) {
-                      e.preventDefault();
-                  }
-              });
-          }
-      })();
-  </script>
 {% endblock javascript %}

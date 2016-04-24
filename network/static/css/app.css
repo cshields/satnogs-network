@@ -280,8 +280,12 @@ code.log p {
     -moz-transform: translate(0px,30px); /* Firefox */
 }
 
-.playpause {
+.playback-time {
     margin-right: 20px;
+    padding: 0.3em;
+    font-size: 1em;
+    vertical-align: bottom;
+    display: inline-block;
 }
 
 #loading {
@@ -294,9 +298,110 @@ code.log p {
 }
 
 .timezone {
-    margin-top: 5px;
+    margin: -5px 0 15px 2px;
+}
+
+#UTCModal .panel-default {
+    margin-bottom: 20px;
+}
+
+#UTCModal .panel-default:last-child {
+    margin-bottom: 0px;
+}
+
+#UTCModal .panel-body {
+    font-weight: bold;
+    font-size: 1.3em;
 }
 
 .tle-data {
     margin-bottom: 15px;
+}
+
+.observation-data .panel-title {
+    display: inline-block;
+}
+
+.panel {
+    margin-bottom: 40px;
+}
+
+.panel-title > a {
+    color: #337ab7;
+}
+
+.verified {
+    color: #009933;
+    padding-right: 5px;
+}
+
+.no_data {
+    color: #cc3300;
+    padding-right: 5px;
+}
+
+.vetting {
+    float: right;
+}
+
+#collapseFilters {
+    padding: 15px;
+}
+
+.filter-section {
+    display: inline-block;
+    margin-right: 20px;
+}
+
+#collapseFilters h4,
+#collapseFilters h3 {
+    display: inline-block;
+}
+
+#collapseFilters button,
+#collapseFilters span {
+    margin-right: 5px;
+}
+
+#collapseFilters button.active {
+    border: 1px solid #333;
+}
+
+#collapseFilters button:not(.active) {
+    color: #666;
+}
+
+@media screen and (max-width:835px) {
+    .vetting {
+        float: none;
+        margin-top: 5px;
+    }
+}
+
+
+/* Satellites
+==================== */
+
+.satellite-info {
+    margin-bottom: 40px;
+}
+
+#SatelliteModal li {
+    margin-bottom: 5px;
+}
+
+.satellite-title {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 5px;
+}
+
+.satellite-names {
+    margin-bottom: 5px;
+}
+
+.satellite-img-full {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 5px;
 }

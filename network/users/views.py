@@ -10,7 +10,7 @@ from rest_framework.authtoken.models import Token
 from network.users.forms import UserForm
 from network.users.models import User
 from network.base.forms import StationForm
-from network.base.models import Station, Observation, Antenna
+from network.base.models import Station, Observation, Antenna, Rig
 
 
 class UserRedirectView(LoginRequiredMixin, RedirectView):
@@ -46,6 +46,7 @@ def view_user(request, username):
         token = Token.objects.create(user=user)
     form = StationForm()
     antennas = Antenna.objects.all()
+    rigs = Rig.objects.all()
 
     return render(request, 'users/user_detail.html',
                   {'user': user,
@@ -53,4 +54,5 @@ def view_user(request, username):
                    'stations': stations,
                    'token': token,
                    'form': form,
-                   'antennas': antennas})
+                   'antennas': antennas,
+                   'rigs': rigs})

@@ -1,7 +1,9 @@
 from django.utils.timezone import now
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 
 from rest_framework import viewsets, mixins
+from rest_framework.response import Response
 
 from network.api.perms import StationOwnerCanEditPermission
 from network.api import serializers, filters
@@ -31,3 +33,16 @@ class JobView(viewsets.ReadOnlyModelViewSet):
                 gs.last_seen = now()
                 gs.save()
         return queryset
+
+
+class SettingsView(viewsets.ReadOnlyModelViewSet):
+    queryset = Station.objects.all()
+    lookup_field = 'uuid'
+
+    def list(self, request):
+        raise Http404()
+
+    def retrieve(self, request, queryset=queryset, uuid=None):
+        station = get_object_or_404(queryset, uuid=uuid)
+        serializer = serializers.SettingsSerializer(station)
+        return Response(serializer.data)

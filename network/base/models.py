@@ -8,8 +8,10 @@ from django.conf import settings
 from django.utils.html import format_html
 
 from network.users.models import User
+from network.base.helpers import get_apikey
 
 
+RIG_TYPES = ['Radio', 'SDR']
 ANTENNA_BANDS = ['HF', 'VHF', 'UHF', 'L', 'S', 'C', 'X', 'KU']
 ANTENNA_TYPES = (
     ('dipole', 'Dipole'),
@@ -18,6 +20,20 @@ ANTENNA_TYPES = (
     ('parabolic', 'Parabolic'),
     ('vertical', 'Verical'),
 )
+OBSERVATION_STATUSES = (
+    ('unknown', 'Unknown'),
+    ('verified', 'Verified'),
+    ('data_not_verified', 'Has Data, Not Verified'),
+    ('no_data', 'No Data'),
+)
+
+
+class Rig(models.Model):
+    name = models.CharField(choices=zip(RIG_TYPES, RIG_TYPES), max_length=10)
+    rictld_number = models.PositiveIntegerField(blank=True, null=True)
+
+    def __unicode__(self):
+        return '{0}: {1}'.format(self.name, self.rictld_number)
 
 
 class Mode(models.Model):
@@ -57,6 +73,9 @@ class Station(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=False)
     last_seen = models.DateTimeField(null=True, blank=True)
+    horizon = models.PositiveIntegerField(help_text='In degrees above 0', default=10)
+    uuid = models.CharField(db_index=True, max_length=100, blank=True)
+    rig = models.ForeignKey(Rig, blank=True, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         ordering = ['-active', '-last_seen']
@@ -90,6 +109,10 @@ class Station(models.Model):
         else:
             return False
 
+    @property
+    def apikey(self):
+        return get_apikey(user=self.owner)
+
     def __unicode__(self):
         return "%d - %s" % (self.pk, self.name)
 
@@ -99,14 +122,14 @@ class Satellite(models.Model):
     norad_cat_id = models.PositiveIntegerField()
     name = models.CharField(max_length=45)
     names = models.TextField(blank=True)
-    image = models.ImageField(upload_to='satellites', blank=True)
+    image = models.CharField(max_length=100, blank=True)
 
     class Meta:
         ordering = ['norad_cat_id']
 
     def get_image(self):
-        if self.image and hasattr(self.image, 'url'):
-            return self.image.url
+        if self.image:
+            return self.image
         else:
             return settings.SATELLITE_DEFAULT_IMAGE
 
@@ -199,9 +222,25 @@ class Observation(models.Model):
         deletion = self.start - timedelta(minutes=int(settings.OBSERVATION_MAX_DELETION_RANGE))
         return deletion > now()
 
+    # observation has at least 1 payload submitted, no verification taken into account
     @property
-    def has_data(self):
+    def has_submitted_data(self):
         return self.data_set.exclude(payload='').count()
+
+    # observaton has at least 1 payload that has been verified good
+    @property
+    def has_verified_data(self):
+        return self.data_set.filter(vetted_status='verified').count()
+
+    # observation is vetted to be all bad data
+    @property
+    def has_no_data(self):
+        return self.data_set.filter(vetted_status='no_data').count() == self.data_set.count()
+
+    # observation has at least 1 payload left unvetted
+    @property
+    def has_unvetted_data(self):
+        return self.data_set.filter(vetted_status='unknown').count()
 
     def __unicode__(self):
         return "%d" % self.id
@@ -214,10 +253,30 @@ class Data(models.Model):
     observation = models.ForeignKey(Observation)
     ground_station = models.ForeignKey(Station)
     payload = models.FileField(upload_to='data_payloads', blank=True, null=True)
+    payload_demode = models.FileField(upload_to='data_payloads', blank=True, null=True)
+    vetted_datetime = models.DateTimeField(null=True, blank=True)
+    vetted_user = models.ForeignKey(User, related_name="vetted_user_set", null=True, blank=True)
+    vetted_status = models.CharField(choices=OBSERVATION_STATUSES,
+                                     max_length=10, default='unknown')
 
     @property
     def is_past(self):
         return self.end < now()
+
+    # this payload has been vetted good/bad by someone
+    @property
+    def is_vetted(self):
+        return not self.vetted_status == 'unknown'
+
+    # this payload has been vetted as good by someone
+    @property
+    def is_verified(self):
+        return self.vetted_status == 'verified'
+
+    # this payload has been vetted as bad by someone
+    @property
+    def is_no_data(self):
+        return self.vetted_status == 'no_data'
 
     class Meta:
         ordering = ['-start', '-end']

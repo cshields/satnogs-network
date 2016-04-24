@@ -19,8 +19,8 @@ from django.core.management import call_command
 from rest_framework import serializers, viewsets
 
 from network.base.models import (Station, Transmitter, Observation,
-                                 Data, Satellite, Antenna, Tle)
-from network.base.forms import StationForm
+                                 Data, Satellite, Antenna, Tle, Rig)
+from network.base.forms import StationForm, SatelliteFilterForm
 from network.base.decorators import admin_required
 
 
@@ -119,8 +119,18 @@ def settings_site(request):
 def observations_list(request):
     """View to render Observations page."""
     observations = Observation.objects.all()
+    satellites = Satellite.objects.all()
 
-    return render(request, 'base/observations.html', {'observations': observations})
+    if request.method == 'GET':
+        form = SatelliteFilterForm(request.GET)
+        if form.is_valid():
+            norad = form.cleaned_data['norad']
+            observations = observations.filter(satellite__norad_cat_id=norad)
+            return render(request, 'base/observations.html',
+                          {'observations': observations, 'satellites': satellites, 'norad': int(norad)})
+
+    return render(request, 'base/observations.html',
+                  {'observations': observations, 'satellites': satellites})
 
 
 @login_required
@@ -160,9 +170,15 @@ def observation_new(request):
     satellites = Satellite.objects.filter(transmitters__alive=True).distinct()
     transmitters = Transmitter.objects.filter(alive=True)
 
+    norad = 0
+    if request.method == 'GET':
+        form = SatelliteFilterForm(request.GET)
+        if form.is_valid():
+            norad = form.cleaned_data['norad']
+
     return render(request, 'base/observation_new.html',
                   {'satellites': satellites,
-                   'transmitters': transmitters,
+                   'transmitters': transmitters, 'norad': norad,
                    'date_min_start': settings.DATE_MIN_START,
                    'date_max_range': settings.DATE_MAX_RANGE})
 
@@ -178,9 +194,11 @@ def prediction_windows(request, sat_id, start_date, end_date):
         return JsonResponse(data, safe=False)
 
     try:
-        satellite = ephem.readtle(str(sat.latest_tle.tle0),
-                                  str(sat.latest_tle.tle1),
-                              str(sat.latest_tle.tle2))
+        satellite = ephem.readtle(
+            str(sat.latest_tle.tle0),
+            str(sat.latest_tle.tle1),
+            str(sat.latest_tle.tle2)
+        )
     except:
         data = {
             'error': 'No TLEs for this satellite yet.'
@@ -211,49 +229,54 @@ def prediction_windows(request, sat_id, start_date, end_date):
                 }
                 break
 
-            if ephem.Date(tr).datetime() < end_date:
-                if ephem.Date(ts).datetime() > end_date:
-                    ts = end_date
-                    keep_digging = False
-                else:
-                    time_start_new = ephem.Date(ts).datetime() + timedelta(minutes=1)
-                    observer.date = time_start_new.strftime("%Y-%m-%d %H:%M:%S.%f")
+            # no match if the sat will not rise above the configured min horizon
+            elevation = format(math.degrees(altt), '.0f')
+            if float(elevation) >= station.horizon:
+                if ephem.Date(tr).datetime() < end_date:
+                    if ephem.Date(ts).datetime() > end_date:
+                        ts = end_date
+                        keep_digging = False
+                    else:
+                        time_start_new = ephem.Date(ts).datetime() + timedelta(minutes=1)
+                        observer.date = time_start_new.strftime("%Y-%m-%d %H:%M:%S.%f")
 
-                # Adjust or discard window if overlaps exist
-                window_start = make_aware(ephem.Date(tr).datetime(), utc)
-                window_end = make_aware(ephem.Date(ts).datetime(), utc)
-                window = _resolve_overlaps(station, window_start, window_end)
-                if window:
-                    if not station_match:
-                        station_windows = {
-                            'id': station.id,
-                            'name': station.name,
-                            'window': []
-                        }
-                        station_match = True
-                    window_start = window[0]
-                    window_end = window[1]
-                    station_windows['window'].append(
-                        {
-                            'start': window_start.strftime("%Y-%m-%d %H:%M:%S.%f"),
-                            'end': window_end.strftime("%Y-%m-%d %H:%M:%S.%f"),
-                            'az_start': azr
-                        })
-                    # In case our window was split in two
-                    try:
-                        window_start = window[2]
-                        window_end = window[3]
+                    # Adjust or discard window if overlaps exist
+                    window_start = make_aware(ephem.Date(tr).datetime(), utc)
+                    window_end = make_aware(ephem.Date(ts).datetime(), utc)
+                    window = _resolve_overlaps(station, window_start, window_end)
+                    if window:
+                        if not station_match:
+                            station_windows = {
+                                'id': station.id,
+                                'name': station.name,
+                                'window': []
+                            }
+                            station_match = True
+                        window_start = window[0]
+                        window_end = window[1]
                         station_windows['window'].append(
                             {
                                 'start': window_start.strftime("%Y-%m-%d %H:%M:%S.%f"),
                                 'end': window_end.strftime("%Y-%m-%d %H:%M:%S.%f"),
                                 'az_start': azr
                             })
-                    except:
-                        pass
-
+                        # In case our window was split in two
+                        try:
+                            window_start = window[2]
+                            window_end = window[3]
+                            station_windows['window'].append(
+                                {
+                                    'start': window_start.strftime("%Y-%m-%d %H:%M:%S.%f"),
+                                    'end': window_end.strftime("%Y-%m-%d %H:%M:%S.%f"),
+                                    'az_start': azr
+                                })
+                        except:
+                            pass
+                else:
+                    # window start outside of window bounds
+                    break
             else:
-                # window start outside of window bounds
+                # did not rise above user configured horizon
                 break
 
         if station_match:
@@ -266,6 +289,15 @@ def observation_view(request, id):
     """View for single observation page."""
     observation = get_object_or_404(Observation, id=id)
     data = Data.objects.filter(observation=observation)
+
+    # not all users will be able to vet data within an observation, allow
+    # staff, observation requestors, and station owners
+    is_vetting_user = False
+    if request.user.is_authenticated():
+        if request.user == observation.author or \
+            data.filter(ground_station__in=Station.objects.filter(owner=request.user)).count or \
+                request.user.is_staff:
+                    is_vetting_user = True
 
     if settings.ENVIRONMENT == 'production':
         discuss_slug = 'https://community.satnogs.org/t/observation-{0}-{1}-{2}' \
@@ -285,10 +317,11 @@ def observation_view(request, id):
 
         return render(request, 'base/observation_view.html',
                       {'observation': observation, 'data': data, 'has_comments': has_comments,
-                       'discuss_url': discuss_url, 'discuss_slug': discuss_slug})
+                       'discuss_url': discuss_url, 'discuss_slug': discuss_slug,
+                       'is_vetting_user': is_vetting_user})
 
     return render(request, 'base/observation_view.html',
-                  {'observation': observation, 'data': data})
+                  {'observation': observation, 'data': data, 'is_vetting_user': is_vetting_user})
 
 
 @login_required
@@ -302,6 +335,28 @@ def observation_delete(request, id):
     else:
         messages.error(request, 'Permission denied.')
     return redirect(reverse('base:observations_list'))
+
+
+@login_required
+def data_verify(request, id):
+    me = request.user
+    data = get_object_or_404(Data, id=id)
+    data.vetted_status = 'verified'
+    data.vetted_user = me
+    data.vetted_datetime = datetime.today()
+    data.save(update_fields=['vetted_status', 'vetted_user', 'vetted_datetime'])
+    return redirect(reverse('base:observation_view', kwargs={'id': data.observation}))
+
+
+@login_required
+def data_mark_bad(request, id):
+    me = request.user
+    data = get_object_or_404(Data, id=id)
+    data.vetted_status = 'no_data'
+    data.vetted_user = me
+    data.vetted_datetime = datetime.today()
+    data.save(update_fields=['vetted_status', 'vetted_user', 'vetted_datetime'])
+    return redirect(reverse('base:observation_view', kwargs={'id': data.observation}))
 
 
 def stations_list(request):
@@ -319,6 +374,7 @@ def station_view(request, id):
     station = get_object_or_404(Station, id=id)
     form = StationForm(instance=station)
     antennas = Antenna.objects.all()
+    rigs = Rig.objects.all()
 
     try:
         satellites = Satellite.objects.filter(transmitters__alive=True).distinct()
@@ -353,15 +409,24 @@ def station_view(request, id):
                     if tr is None:
                         break
 
+                    # bug in pyephem causes overhead sats to appear in the result
+                    # mixing next-pass data with current pass data, resulting in
+                    # satnogs/satnogs-network#199. As a workaround, pyephem does
+                    # return set time for current pass while rise time for next
+                    # pass so when this happens we want to toss the entry out
+                    # not a break as this sat might have another valid pass
+                    if ts < tr:
+                        pass
+
                     # using the angles module convert the sexagesimal degree into
                     # something more easily read by a human
                     elevation = format(math.degrees(altt), '.0f')
                     azimuth = format(math.degrees(azr), '.0f')
                     passid += 1
 
-                    # show only if >= 10 degrees and in next 6 hours
+                    # show only if >= configured horizon and in next 6 hours
                     if tr < ephem.date(datetime.today() + timedelta(hours=6)):
-                        if float(elevation) >= 10:
+                        if float(elevation) >= station.horizon:
                             sat_pass = {'passid': passid,
                                         'mytime': str(observer.date),
                                         'debug': observer.next_pass(sat_ephem),
@@ -392,7 +457,8 @@ def station_view(request, id):
                   {'station': station, 'form': form, 'antennas': antennas,
                    'mapbox_id': settings.MAPBOX_MAP_ID,
                    'mapbox_token': settings.MAPBOX_TOKEN,
-                   'nextpasses': sorted(nextpasses, key=itemgetter('tr'))})
+                   'nextpasses': sorted(nextpasses, key=itemgetter('tr')),
+                   'rigs': rigs})
 
 
 @require_POST
