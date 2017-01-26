@@ -43,3 +43,4 @@ function gridsquare() {
             lon_subsquare.toLowerCase() + lat_subsquare.toLowerCase());
     }
 }
+
